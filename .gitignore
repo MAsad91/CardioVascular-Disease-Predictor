@@ -1,0 +1,22 @@
+# Ignore database files
+instance/
+*.db
+
+# Ignore model binaries and pickles
+models/
+*.pkl
+*.png
+
+# Ignore temporary files
+temp/
+*.pkl
+
+# Ignore virtual environments
+venv/
+.env/
+
+# Ignore OS and editor files
+.DS_Store
+Thumbs.db
+*.pyc
+__pycache__/ 
