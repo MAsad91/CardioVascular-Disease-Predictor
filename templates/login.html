@@ -13,6 +13,34 @@
     </div>
 
     <div class="auth-body">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else 'success' if category == 'success' else 'info' }}">
+                        <span class="alert-message">
+                            <i class="bi bi-{{ 'exclamation-triangle' if category == 'error' else 'check-circle' if category == 'success' else 'info-circle' }} me-2"></i>
+                            {{ message }}
+                        </span>
+                        <button type="button" class="btn-close" onclick="this.parentElement.style.display='none'">×</button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Page-specific messages -->
+        {% if page_messages %}
+            {% for msg in page_messages %}
+                <div class="alert alert-{{ 'danger' if msg.category == 'error' else 'success' if msg.category == 'success' else 'info' }}" data-page-message="true">
+                    <span class="alert-message">
+                        <i class="bi bi-{{ 'exclamation-triangle' if msg.category == 'error' else 'check-circle' if msg.category == 'success' else 'info-circle' }} me-2"></i>
+                        {{ msg.message }}
+                    </span>
+                    <button type="button" class="btn-close" onclick="this.parentElement.style.display='none'">×</button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
         <!-- Only show logout message on login page -->
         {% if logout_message %}
         <div class="alert alert-info">

@@ -12,13 +12,15 @@
                 </div>
                 <div class="card-body">
                     <div class="alert alert-success" role="alert">
-                        <h4 class="alert-heading">Training Completed Successfully!</h4>
-                        <p>Multiple models have been trained and saved for heart disease prediction:</p>
-                        <ul>
-                            <li>KNN (K-Nearest Neighbors)</li>
-                            <li>Random Forest</li>
-                            <li>XGBoost</li>
-                        </ul>
+                        <span class="alert-message">
+                            <h4 class="alert-heading">Training Completed Successfully!</h4>
+                            <p>Multiple models have been trained and saved for heart disease prediction:</p>
+                            <ul>
+                                <li>KNN (K-Nearest Neighbors)</li>
+                                <li>Random Forest</li>
+                                <li>XGBoost</li>
+                            </ul>
+                        </span>
                     </div>
                     
                     <!-- Model Comparison Visualization -->
@@ -106,7 +108,8 @@
                     {% endfor %}
                     
                     <div class="alert alert-info mt-4">
-                        <h5><i class="bi bi-lightbulb me-2"></i>About the Consensus Prediction</h5>
+                        <span class="alert-message">
+                            <h5><i class="bi bi-lightbulb me-2"></i>About the Consensus Prediction</h5>
                         <p>Our system combines predictions from all three models to provide a more robust consensus prediction. The consensus is a weighted average, with slightly higher weights assigned to ensemble models (Random Forest and XGBoost).</p>
                     </div>
                     

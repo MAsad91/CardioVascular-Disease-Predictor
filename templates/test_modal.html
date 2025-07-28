@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}Test Modal{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <h1>Modal Test Page</h1>
+            <p>This page tests the modal system.</p>
+            
+            <div class="mt-4">
+                <button class="btn btn-primary" onclick="modalSystem.showSuccess('Test', 'Modal system is working!')">
+                    Test Modal
+                </button>
+                <a href="{{ url_for('index') }}" class="btn btn-secondary ms-2">Back to Home</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

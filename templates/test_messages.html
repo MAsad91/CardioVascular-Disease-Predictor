@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Test Messages{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <h1>Message Test Page</h1>
+            <p>This page tests the message handling system.</p>
+            
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'error' else 'success' if category == 'success' else 'info' }}">
+                            <i class="bi bi-{{ 'exclamation-triangle' if category == 'error' else 'check-circle' if category == 'success' else 'info-circle' }} me-2"></i>
+                            {{ message }}
+                            <button type="button" class="btn-close" onclick="this.parentElement.style.display='none'">×</button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <!-- Page-specific messages -->
+            {% if page_messages %}
+                {% for msg in page_messages %}
+                    <div class="alert alert-{{ 'danger' if msg.category == 'error' else 'success' if msg.category == 'success' else 'info' }}" data-page-message="true">
+                        <i class="bi bi-{{ 'exclamation-triangle' if msg.category == 'error' else 'check-circle' if msg.category == 'success' else 'info-circle' }} me-2"></i>
+                        {{ msg.message }}
+                        <button type="button" class="btn-close" onclick="this.parentElement.style.display='none'">×</button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+            
+            <div class="mt-4">
+                <a href="{{ url_for('index') }}" class="btn btn-primary">Back to Home</a>
+            </div>
+        </div>
+    </div>
+ 

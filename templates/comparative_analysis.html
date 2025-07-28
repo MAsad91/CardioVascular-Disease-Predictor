@@ -222,9 +222,11 @@
     {% if not predictions or predictions|length < 2 %}
         <div class="health-summary-card text-center">
             <div class="alert alert-info">
-                <i class="bi bi-info-circle me-2"></i>
-                <strong>Not enough data:</strong> You need at least two predictions to see a timeline comparison. 
-                <a href="/" class="alert-link">Make more predictions</a> to track changes over time.
+                <span class="alert-message">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <strong>Not enough data:</strong> You need at least two predictions to see a timeline comparison. 
+                    <a href="/" class="alert-link">Make more predictions</a> to track changes over time.
+                </span>
             </div>
         </div>
     {% else %}

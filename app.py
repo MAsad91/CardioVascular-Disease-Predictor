@@ -102,6 +102,18 @@ def inject_user():
     """Make current_user available in all templates"""
     return dict(current_user=current_user)
 
+@app.context_processor
+def inject_page_messages():
+    """Inject page-specific messages into templates"""
+    messages = []
+    if 'flash_messages' in session:
+        current_page = request.endpoint
+        page_messages = [msg for msg in session['flash_messages'] if msg['page'] == current_page]
+        messages = page_messages
+        # Remove the messages that were just retrieved
+        session['flash_messages'] = [msg for msg in session['flash_messages'] if msg['page'] != current_page]
+    return dict(page_messages=messages)
+
 # Keep the old Prediction model for backward compatibility with existing data
 class Prediction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -304,6 +316,21 @@ feature_descriptions = {
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+# Message handling function
+def flash_message(message, category='info', page_specific=True):
+    """Flash a message that will only show on the current page"""
+    if page_specific:
+        # Store message in session with current page info
+        session['flash_messages'] = session.get('flash_messages', [])
+        session['flash_messages'].append({
+            'message': message,
+            'category': category,
+            'page': request.endpoint
+        })
+    else:
+        # Use regular flash for global messages
+        flash(message, category)
+
 # Authentication Routes
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -317,7 +344,7 @@ def login():
         remember = request.form.get('remember', False)
         
         if not username_or_email or not password:
-            flash('Please fill in all fields.', 'error')
+            flash_message('Please fill in all fields.', 'error', page_specific=False)
             return render_template('login.html')
         
         # Try to find user by username or email
@@ -328,7 +355,7 @@ def login():
         
         if user and user.check_password(password):
             if not user.is_active:
-                flash('Your account has been deactivated. Please contact support.', 'error')
+                flash_message('Your account has been deactivated. Please contact support.', 'error', page_specific=False)
                 return render_template('login.html')
             
             # Update last login
@@ -338,14 +365,19 @@ def login():
             # Log the user in
             login_user(user, remember=remember)
             
-            # Store welcome message in session instead of flash
-            session['welcome_message'] = f'Welcome back, {user.get_full_name()}!'
+            # Store welcome message as page-specific message for dashboard
+            session['flash_messages'] = session.get('flash_messages', [])
+            session['flash_messages'].append({
+                'message': f'Welcome back, {user.get_full_name()}!',
+                'category': 'success',
+                'page': 'index'  # Explicitly set for dashboard page
+            })
             
             # Redirect to next page or index
             next_page = request.args.get('next')
             return redirect(next_page) if next_page else redirect(url_for('index'))
         else:
-            flash('Invalid username/email or password.', 'error')
+            flash_message('Invalid username/email or password.', 'error', page_specific=False)
     
     # Get logout message from session if exists
     logout_message = session.pop('logout_message', None)
@@ -650,9 +682,6 @@ def index():
         print(f"[DEBUG] Index - Dashboard data prepared successfully")
         print(f"[DEBUG] Index - About to render template with total_assessments: {total_assessments}")
         
-        # Get welcome message from session if exists
-        welcome_message = session.pop('welcome_message', None)
-        
         # Get admin access error message from session if exists
         admin_access_error = session.pop('admin_access_error', None)
         
@@ -662,7 +691,6 @@ def index():
                              model_accuracy=model_accuracy,
                              reports_analyzed=reports_analyzed,
                              active_users=active_users,
-                             welcome_message=welcome_message,
                              admin_access_error=admin_access_error)
     except Exception as e:
         print(f"[ERROR] Index route error: {str(e)}")
@@ -680,6 +708,22 @@ def about():
 @app.route('/help')
 def help_page():
     return render_template('help.html')
+
+@app.route('/test_messages')
+def test_messages():
+    """Test route to verify message handling"""
+    # Test different types of messages
+    flash_message('This is a page-specific error message', 'error', page_specific=True)
+    flash_message('This is a page-specific success message', 'success', page_specific=True)
+    flash_message('This is a global info message', 'info', page_specific=False)
+    return render_template('test_messages.html')
+
+@app.route('/test_modal')
+def test_modal():
+    """Test route to verify modal system"""
+    flash('This is a test flash message', 'error')
+    flash('This is another test message', 'success')
+    return render_template('test_modal.html')
 
 @app.route('/explain_prediction/<session_id>', methods=['GET'])
 @login_required
@@ -1494,9 +1538,9 @@ def risk_assessment():
             
             # If there are any errors, return to form with error messages
             if errors:
-                flash('Please correct the following errors:', 'error')
+                flash_message('Please correct the following errors:', 'error', page_specific=True)
                 for error in errors:
-                    flash(error, 'error')
+                    flash_message(error, 'error', page_specific=True)
                 return render_template('risk_assessment_form.html', 
                                      feature_descriptions=feature_descriptions,
                                      form_data=request.form,
@@ -1716,7 +1760,7 @@ def risk_assessment():
             
         except Exception as e:
             print(f"Error in risk assessment: {str(e)}")  # Debug log
-            flash(f'An error occurred: {str(e)}', 'error')
+            flash_message(f'An error occurred: {str(e)}', 'error', page_specific=True)
             return render_template('risk_assessment_form.html', 
                                  feature_descriptions=feature_descriptions,
                                  form_data=request.form,

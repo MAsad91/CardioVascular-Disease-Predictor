@@ -269,16 +269,20 @@
                     </div>
                 </div>
                 
-                {% with messages = get_flashed_messages(with_categories=true) %}
-                    {% if messages %}
-                        {% for category, message in messages %}
-                            <div class="alert alert-{{ 'danger' if category == 'error' else 'info' }} alert-dismissible fade show mt-3" role="alert">
-                                {{ message }}
-                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            </div>
-                        {% endfor %}
-                    {% endif %}
-                {% endwith %}
+                <!-- Flash messages will be converted to modals by modal.js -->
+                
+                <!-- Page-specific messages -->
+                {% if page_messages %}
+                    {% for msg in page_messages %}
+                        <div class="alert alert-{{ 'danger' if msg.category == 'error' else 'success' if msg.category == 'success' else 'info' }} alert-dismissible fade show mt-3" role="alert" data-page-message="true">
+                            <span class="alert-message">
+                                <i class="bi bi-{{ 'exclamation-triangle' if msg.category == 'error' else 'check-circle' if msg.category == 'success' else 'info-circle' }} me-2"></i>
+                                {{ msg.message }}
+                            </span>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
 
                 <!-- Extraction Status Display -->
                 {% if prefilled_data or missing_fields %}

@@ -17,8 +17,10 @@
             {% if messages %}
                 {% for category, message in messages %}
                     <div class="alert alert-{{ 'danger' if category == 'error' else 'success' if category == 'success' else 'info' }}">
-                        <i class="bi bi-{{ 'exclamation-triangle' if category == 'error' else 'check-circle' if category == 'success' else 'info-circle' }} me-2"></i>
-                        {{ message }}
+                        <span class="alert-message">
+                            <i class="bi bi-{{ 'exclamation-triangle' if category == 'error' else 'check-circle' if category == 'success' else 'info-circle' }} me-2"></i>
+                            {{ message }}
+                        </span>
                         <button type="button" class="btn-close" onclick="this.parentElement.style.display='none'">×</button>
                     </div>
                 {% endfor %}

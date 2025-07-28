@@ -624,13 +624,15 @@
                 {% if missing_fields %}
                 <div class="col-12">
                     <div class="alert alert-info">
-                        <h4 class="alert-heading"><i class="bi bi-info-circle"></i> Missing Information</h4>
-                        <p>Please fill in the following fields to complete your assessment:</p>
-                        <ul>
-                            {% for field in missing_fields %}
-                            <li>{{ feature_descriptions[field] }}</li>
-                            {% endfor %}
-                        </ul>
+                        <span class="alert-message">
+                            <h4 class="alert-heading"><i class="bi bi-info-circle"></i> Missing Information</h4>
+                            <p>Please fill in the following fields to complete your assessment:</p>
+                            <ul>
+                                {% for field in missing_fields %}
+                                <li>{{ feature_descriptions[field] }}</li>
+                                {% endfor %}
+                            </ul>
+                        </span>
                     </div>
                 </div>
                 {% endif %}

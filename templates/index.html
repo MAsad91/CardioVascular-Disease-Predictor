@@ -3,21 +3,28 @@
 {% block title %}Heart Care - Your Personal Heart Health Assistant{% endblock %}
 
 {% block content %}
-<!-- Welcome Message -->
-{% if welcome_message %}
-<div class="notification-alert notification-success" role="alert" style="margin-bottom: 1rem;">
-    <i class="bi bi-check-circle-fill me-2"></i>
-    {{ welcome_message }}
-    <button type="button" class="btn-close" onclick="this.parentElement.remove()">×</button>
-</div>
+
+<!-- Page-specific messages -->
+{% if page_messages %}
+    {% for msg in page_messages %}
+        <div class="alert alert-{{ 'danger' if msg.category == 'error' else 'success' if msg.category == 'success' else 'info' }} alert-dismissible fade show mt-3" role="alert" data-page-message="true">
+            <span class="alert-message">
+                <i class="bi bi-{{ 'exclamation-triangle' if msg.category == 'error' else 'check-circle' if msg.category == 'success' else 'info-circle' }} me-2"></i>
+                {{ msg.message }}
+            </span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    {% endfor %}
 {% endif %}
 
 <!-- Admin Access Error Message -->
 {% if admin_access_error %}
-<div class="notification-alert notification-danger" role="alert" style="margin-bottom: 1rem;">
-    <i class="bi bi-exclamation-triangle-fill me-2"></i>
-    {{ admin_access_error }}
-    <button type="button" class="btn-close" onclick="this.parentElement.remove()">×</button>
+<div class="alert alert-danger" role="alert" style="margin-bottom: 1rem;">
+    <span class="alert-message">
+        <i class="bi bi-exclamation-triangle me-2"></i>
+        {{ admin_access_error }}
+    </span>
+    <button type="button" class="btn-close" onclick="this.parentElement.style.display='none'">×</button>
 </div>
 {% endif %}
 <style>

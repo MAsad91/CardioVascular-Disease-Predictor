@@ -238,7 +238,9 @@
                 </div>
                 <div class="card-body">
                     <div class="alert alert-info">
-                        <p>This explanation shows how we arrived at this prediction using machine learning models.</p>
+                        <span class="alert-message">
+                            <p>This explanation shows how we arrived at this prediction using machine learning models.</p>
+                        </span>
                     </div>
 
                     {% if explanation.assessment_type in ['quick_form', 'quick_assessment'] %}
@@ -529,7 +531,9 @@
                             <div class="card-body">
                                 {% if explanation['risk_level'] == 'High' %}
                                     <div class="alert alert-danger">
-                                        <strong>High Risk:</strong> We strongly recommend you consult a doctor or cardiologist as soon as possible for further evaluation and management.
+                                        <span class="alert-message">
+                                            <strong>High Risk:</strong> We strongly recommend you consult a doctor or cardiologist as soon as possible for further evaluation and management.
+                                        </span>
                                     </div>
                                     <ul>
                                         <li>Schedule an immediate appointment with your healthcare provider.</li>
@@ -538,7 +542,9 @@
                                     </ul>
                                 {% elif explanation['risk_level'] == 'Low' %}
                                     <div class="alert alert-success">
-                                        <strong>Low Risk:</strong> Your risk of heart disease is low. Maintain a healthy lifestyle to keep your heart healthy!
+                                        <span class="alert-message">
+                                            <strong>Low Risk:</strong> Your risk of heart disease is low. Maintain a healthy lifestyle to keep your heart healthy!
+                                        </span>
                                     </div>
                                     <ul>
                                         <li>Continue regular physical activity.</li>
@@ -548,7 +554,9 @@
                                     </ul>
                                 {% else %}
                                     <div class="alert alert-warning">
-                                        <strong>Moderate Risk:</strong> We recommend scheduling a routine check-up with your healthcare provider and following healthy lifestyle habits.
+                                        <span class="alert-message">
+                                            <strong>Moderate Risk:</strong> We recommend scheduling a routine check-up with your healthcare provider and following healthy lifestyle habits.
+                                        </span>
                                     </div>
                                     <ul>
                                         <li>Schedule a follow-up with your healthcare provider within a week.</li>

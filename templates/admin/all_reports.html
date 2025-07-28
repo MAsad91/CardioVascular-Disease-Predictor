@@ -497,16 +497,18 @@ function deleteReport(sessionId) {
 function showNotification(message, type) {
     // Create notification element
     const notification = document.createElement('div');
-    notification.className = `notification-alert notification-${type} position-fixed`;
+    notification.className = `alert alert-${type} position-fixed`;
     notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px; max-width: 400px;';
     
-    const icon = type === 'success' ? 'check-circle-fill' : 
-                type === 'error' ? 'exclamation-triangle-fill' : 
-                type === 'warning' ? 'exclamation-triangle-fill' : 'info-circle-fill';
+    const icon = type === 'success' ? 'check-circle' : 
+                type === 'error' ? 'exclamation-triangle' : 
+                type === 'warning' ? 'exclamation-triangle' : 'info-circle';
     
     notification.innerHTML = `
-        <i class="bi bi-${icon} me-2"></i>
-        ${message}
+        <span class="alert-message">
+            <i class="bi bi-${icon} me-2"></i>
+            ${message}
+        </span>
         <button type="button" class="btn-close" onclick="this.parentElement.remove()">×</button>
     `;
     
