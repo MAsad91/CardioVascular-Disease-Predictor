@@ -1,0 +1,136 @@
+{% extends "base_sidebar.html" %}
+
+{% block title %}Model Training - Heart Disease Prediction{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="card-title mb-0">Model Training Results</h3>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-success" role="alert">
+                        <h4 class="alert-heading">Training Completed Successfully!</h4>
+                        <p>Multiple models have been trained and saved for heart disease prediction:</p>
+                        <ul>
+                            <li>KNN (K-Nearest Neighbors)</li>
+                            <li>Random Forest</li>
+                            <li>XGBoost</li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Model Comparison Visualization -->
+                    <h4 class="mt-4 mb-3">Model Performance Comparison</h4>
+                    <div class="card mb-4">
+                        <div class="card-body text-center">
+                            <img src="{{ url_for('serve_model_file', filename='model_comparison.png') }}" alt="Model Comparison" class="img-fluid">
+                            <p class="mt-2 text-muted">This chart compares the accuracy, precision, recall, and F1 score of all trained models.</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Model Specific Results -->
+                    {% for model_name, model_metrics in metrics.items() %}
+                    <h4 class="mt-4 mb-3">{{ model_name|upper }} Model Results</h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card mb-4">
+                                <div class="card-header">
+                                    <h5 class="card-title mb-0">{{ model_name|upper }} Metrics</h5>
+                                </div>
+                                <div class="card-body">
+                                    <ul class="list-group list-group-flush">
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            Accuracy
+                                            <span class="badge bg-primary rounded-pill">{{ "%.4f"|format(model_metrics.accuracy) }}</span>
+                                        </li>
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            Precision
+                                            <span class="badge bg-primary rounded-pill">{{ "%.4f"|format(model_metrics.precision) }}</span>
+                                        </li>
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            Recall
+                                            <span class="badge bg-primary rounded-pill">{{ "%.4f"|format(model_metrics.recall) }}</span>
+                                        </li>
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            F1 Score
+                                            <span class="badge bg-primary rounded-pill">{{ "%.4f"|format(model_metrics.f1) }}</span>
+                                        </li>
+                                        {% if model_metrics.roc_auc %}
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            ROC AUC
+                                            <span class="badge bg-primary rounded-pill">{{ "%.4f"|format(model_metrics.roc_auc) }}</span>
+                                        </li>
+                                        {% endif %}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card mb-4">
+                                <div class="card-header">
+                                    <h5 class="card-title mb-0">{{ model_name|upper }} Confusion Matrix</h5>
+                                </div>
+                                <div class="card-body text-center">
+                                    <img src="{{ url_for('serve_model_file', filename=model_name.lower() + '_confusion_matrix.png') }}" alt="{{ model_name|upper }} Confusion Matrix" class="img-fluid">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if model_name == 'knn' %}
+                    <!-- KNN Parameter Selection -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">K Parameter Selection</h5>
+                        </div>
+                        <div class="card-body text-center">
+                            <img src="{{ url_for('serve_model_file', filename='knn_k_selection.png') }}" alt="K Selection" class="img-fluid">
+                            <p class="mt-3">The K parameter was optimized to provide the best prediction accuracy.</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if model_name in ['random_forest', 'xgboost'] %}
+                    <!-- Feature Importance -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">{{ model_name|upper }} Feature Importance</h5>
+                        </div>
+                        <div class="card-body text-center">
+                            <img src="{{ url_for('serve_model_file', filename=model_name.lower() + '_feature_importance.png') }}" alt="{{ model_name|upper }} Feature Importance" class="img-fluid">
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                    
+                    <div class="alert alert-info mt-4">
+                        <h5><i class="bi bi-lightbulb me-2"></i>About the Consensus Prediction</h5>
+                        <p>Our system combines predictions from all three models to provide a more robust consensus prediction. The consensus is a weighted average, with slightly higher weights assigned to ensemble models (Random Forest and XGBoost).</p>
+                    </div>
+                    
+                    <div class="text-center mt-4">
+                        <a href="/" class="btn btn-primary btn-lg">Make Predictions</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        background: linear-gradient(135deg, #232946 0%, #232946 80%, #2d325a 100%) !important;
+        color: #f3f6fa !important;
+        border: none;
+        box-shadow: 0 2px 12px rgba(30,30,60,0.18);
+    }
+    .card-header {
+        background: #232946 !important;
+        color: #fff !important;
+        border-bottom: 1px solid #2d325a;
+    }
+    .text-muted { color: #bdbddd !important; }
+</style>
+{% endblock %} 

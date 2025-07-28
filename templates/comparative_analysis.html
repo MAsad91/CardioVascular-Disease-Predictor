@@ -1,0 +1,803 @@
+{% extends "base_sidebar.html" %}
+
+{% block title %}Health Timeline - Heart Disease Prediction{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --bg-darkest: #1a1e3a;
+        --bg-darker: #212447;
+        --bg-dark: #232946;
+        --text-light: #f3f6fa;
+        --text-muted: #bdbddd;
+        --primary-color: #7ecbff;
+        --secondary-color: #7fffd4;
+        --border-radius: 1rem;
+        --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+    
+    body {
+        font-family: 'Poppins', sans-serif;
+        background: var(--bg-dark);
+        color: var(--text-light);
+    }
+    
+    .timeline-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+    }
+    
+    .timeline-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+    
+    .timeline-header h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--text-light);
+        margin-bottom: 1rem;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .timeline-header p {
+        font-size: 1.2rem;
+        color: var(--text-muted);
+        max-width: 600px;
+        margin: 0 auto;
+    }
+    
+    .health-summary-card {
+        background: linear-gradient(135deg, var(--bg-darker) 0%, var(--bg-darkest) 100%);
+        border-radius: 1.5rem;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+        border: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .metric-card {
+        background: rgba(255,255,255,0.05);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        text-align: center;
+        transition: all 0.3s ease;
+        border: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .metric-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 24px rgba(126,203,255,0.15);
+    }
+    
+    .metric-value {
+        font-size: 2rem;
+        font-weight: 700;
+        margin: 1rem 0;
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    
+    .metric-label {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+    }
+    
+    .nav-tabs {
+        border: none;
+        margin-bottom: 2rem;
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+    }
+    
+    .nav-tabs .nav-link {
+        border: none;
+        color: var(--text-muted);
+        padding: 1rem 1.5rem;
+        border-radius: 0.75rem;
+        transition: all 0.3s ease;
+        background: rgba(255,255,255,0.05);
+    }
+    
+    .nav-tabs .nav-link:hover {
+        background: rgba(126,203,255,0.1);
+        color: var(--text-light);
+    }
+    
+    .nav-tabs .nav-link.active {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        color: var(--bg-dark);
+        font-weight: 600;
+    }
+    
+    .tab-content {
+        background: linear-gradient(135deg, var(--bg-darker) 0%, var(--bg-darkest) 100%);
+        border-radius: 1.5rem;
+        padding: 2rem;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+        border: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .chart-container {
+        background: rgba(255,255,255,0.05);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        margin-top: 2rem;
+    }
+    
+    .info-box {
+        background: rgba(126,203,255,0.1);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        margin: 1.5rem 0;
+        border: 1px solid rgba(126,203,255,0.2);
+    }
+    
+    .info-box h6 {
+        color: var(--primary-color);
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+    
+    .info-box ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .info-box li {
+        margin-bottom: 0.5rem;
+        color: var(--text-muted);
+    }
+    
+    .info-box li strong {
+        color: var(--text-light);
+    }
+    
+    .progress {
+        height: 0.75rem;
+        background: rgba(255,255,255,0.1);
+        border-radius: 1rem;
+        margin: 1rem 0;
+        overflow: hidden;
+    }
+    
+    .progress-bar {
+        background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        border-radius: 1rem;
+        transition: width 1s ease;
+    }
+    
+    .risk-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 2rem;
+        font-weight: 600;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+    }
+    
+    .risk-badge.low {
+        background: rgba(127,255,212,0.2);
+        color: #7fffd4;
+    }
+    
+    .risk-badge.medium {
+        background: rgba(255,209,102,0.2);
+        color: #ffd166;
+    }
+    
+    .risk-badge.high {
+        background: rgba(255,107,107,0.2);
+        color: #ff6b6b;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .fade-in {
+        animation: fadeIn 0.5s ease forwards;
+    }
+</style>
+
+<div class="timeline-container">
+    <div class="timeline-header">
+        <h1>Health Timeline Analysis</h1>
+        <p>Track and visualize your heart health metrics over time to monitor your progress and make informed decisions.</p>
+    </div>
+    
+    {% if not predictions or predictions|length < 2 %}
+        <div class="health-summary-card text-center">
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle me-2"></i>
+                <strong>Not enough data:</strong> You need at least two predictions to see a timeline comparison. 
+                <a href="/" class="alert-link">Make more predictions</a> to track changes over time.
+            </div>
+        </div>
+    {% else %}
+        <!-- Health Summary Section -->
+        <div class="health-summary-card">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="metric-card">
+                        <div class="metric-label">Current Risk Level</div>
+                        <div class="risk-badge {% if predictions[0].risk_level == 'High' %}high{% elif predictions[0].risk_level == 'Medium' %}medium{% else %}low{% endif %}">
+                            {{ predictions[0].risk_level }}
+                        </div>
+                        <div class="metric-label mt-2">Target: Low Risk (0-30%)</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="metric-card">
+                        <div class="metric-label">Latest Cholesterol</div>
+                        <div class="metric-value">{{ predictions[0]['metrics']['cholesterol'] }} mg/dL</div>
+                        <div class="metric-label">Target: < 200 mg/dL</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="metric-card">
+                        <div class="metric-label">Latest Blood Pressure</div>
+                        <div class="metric-value">{{ predictions[0]['metrics']['blood_pressure'] }} mm Hg</div>
+                        <div class="metric-label">Target: < 120/80 mm Hg</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Metrics Tabs -->
+        <div class="mb-5">
+            <ul class="nav nav-tabs" id="metricsTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="risk-tab" data-bs-toggle="tab" data-bs-target="#risk-content" type="button" role="tab">
+                        <i class="bi bi-heart-pulse me-2"></i>Risk Score
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="cholesterol-tab" data-bs-toggle="tab" data-bs-target="#cholesterol-content" type="button" role="tab">
+                        <i class="bi bi-droplet me-2"></i>Cholesterol
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="bp-tab" data-bs-toggle="tab" data-bs-target="#bp-content" type="button" role="tab">
+                        <i class="bi bi-speedometer2 me-2"></i>Blood Pressure
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="hr-tab" data-bs-toggle="tab" data-bs-target="#hr-content" type="button" role="tab">
+                        <i class="bi bi-heart me-2"></i>Heart Rate
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="st-tab" data-bs-toggle="tab" data-bs-target="#st-content" type="button" role="tab">
+                        <i class="bi bi-graph-up me-2"></i>ST Depression
+                    </button>
+                </li>
+            </ul>
+            
+            <div class="tab-content" id="metricsTabContent">
+                <!-- Risk Score Tab -->
+                <div class="tab-pane fade show active" id="risk-content" role="tabpanel">
+                    <div class="fade-in">
+                        <h5 class="mb-4">Your Risk Score Analysis</h5>
+                        <div class="info-box">
+                            <h6><i class="bi bi-info-circle me-2"></i>Current Risk Assessment</h6>
+                            <p>Your current risk score is <strong>{{ predictions[0]['metrics']['risk_score']|round(1) }}%</strong>. 
+                            {% if predictions[0]['metrics']['risk_score'] < 30 %}
+                                This indicates a low risk of heart disease.
+                            {% elif predictions[0]['metrics']['risk_score'] < 70 %}
+                                This indicates a medium risk of heart disease.
+                            {% else %}
+                                This indicates a high risk of heart disease.
+                            {% endif %}
+                            </p>
+                        </div>
+                        
+                        <div class="progress">
+                            <div class="progress-bar {% if predictions[0]['metrics']['risk_score'] < 30 %}bg-success{% elif predictions[0]['metrics']['risk_score'] < 70 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                 role="progressbar" 
+                                 style="width: {{ predictions[0]['metrics']['risk_score'] }}%" 
+                                 aria-valuenow="{{ predictions[0]['metrics']['risk_score'] }}" 
+                                 aria-valuemin="0" 
+                                 aria-valuemax="100">
+                                {{ predictions[0]['metrics']['risk_score']|round(1) }}%
+                            </div>
+                        </div>
+                        
+                        <div class="info-box">
+                            <h6><i class="bi bi-lightning-charge me-2"></i>Healthy Ranges</h6>
+                            <ul>
+                                <li><strong>Low Risk (0-30%):</strong> Ideal range, indicates good heart health</li>
+                                <li><strong>Medium Risk (31-70%):</strong> Requires monitoring and lifestyle changes</li>
+                                <li><strong>High Risk (71-100%):</strong> Requires medical attention and intervention</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="chart-container">
+                            <canvas id="riskChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Cholesterol Tab -->
+                <div class="tab-pane fade" id="cholesterol-content" role="tabpanel">
+                    <div class="fade-in">
+                        <h5 class="mb-4">Cholesterol Analysis</h5>
+                        <div class="info-box">
+                            <h6><i class="bi bi-info-circle me-2"></i>Current Cholesterol</h6>
+                            <p>Your current cholesterol level is <strong>{{ predictions[0]['metrics']['cholesterol'] }} mg/dL</strong>. 
+                            {% if predictions[0]['metrics']['cholesterol'] < 200 %}
+                                This is within the healthy range.
+                            {% elif predictions[0]['metrics']['cholesterol'] < 240 %}
+                                This is considered borderline high.
+                            {% else %}
+                                This is considered high and requires attention.
+                            {% endif %}
+                            </p>
+                        </div>
+                        
+                        <div class="chart-container">
+                            <canvas id="cholesterolChart"></canvas>
+                        </div>
+                        
+                        <div class="info-box">
+                            <h6><i class="bi bi-lightning-charge me-2"></i>Healthy Ranges</h6>
+                            <ul>
+                                <li><strong>Optimal:</strong> Less than 200 mg/dL</li>
+                                <li><strong>Borderline High:</strong> 200-239 mg/dL</li>
+                                <li><strong>High:</strong> 240 mg/dL and above</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Blood Pressure Tab -->
+                <div class="tab-pane fade" id="bp-content" role="tabpanel">
+                    <div class="fade-in">
+                        <h5 class="mb-4">Blood Pressure Analysis</h5>
+                        <div class="info-box">
+                            <h6><i class="bi bi-info-circle me-2"></i>Current Blood Pressure</h6>
+                            <p>Your current blood pressure is <strong>{{ predictions[0]['metrics']['blood_pressure'] }} mm Hg</strong>. 
+                            {% if predictions[0]['metrics']['blood_pressure'] < 120 %}
+                                This is within the normal range.
+                            {% elif predictions[0]['metrics']['blood_pressure'] < 130 %}
+                                This is considered elevated.
+                            {% elif predictions[0]['metrics']['blood_pressure'] < 140 %}
+                                This is considered stage 1 hypertension.
+                            {% else %}
+                                This is considered stage 2 hypertension.
+                            {% endif %}
+                            </p>
+                        </div>
+                        
+                        <div class="chart-container">
+                            <canvas id="bpChart"></canvas>
+                        </div>
+                        
+                        <div class="info-box">
+                            <h6><i class="bi bi-lightning-charge me-2"></i>Healthy Ranges</h6>
+                            <ul>
+                                <li><strong>Normal:</strong> Less than 120 mm Hg</li>
+                                <li><strong>Elevated:</strong> 120-129 mm Hg</li>
+                                <li><strong>Hypertension Stage 1:</strong> 130-139 mm Hg</li>
+                                <li><strong>Hypertension Stage 2:</strong> 140 mm Hg and above</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Heart Rate Tab -->
+                <div class="tab-pane fade" id="hr-content" role="tabpanel">
+                    <div class="fade-in">
+                        <h5 class="mb-4">Heart Rate Analysis</h5>
+                        <div class="info-box">
+                            <h6><i class="bi bi-info-circle me-2"></i>Current Heart Rate</h6>
+                            <p>Your current maximum heart rate is <strong>{{ predictions[0]['metrics']['heart_rate'] }} BPM</strong>. 
+                            {% if predictions[0]['metrics']['heart_rate'] > 150 %}
+                                This indicates good cardiovascular fitness.
+                            {% elif predictions[0]['metrics']['heart_rate'] > 130 %}
+                                This indicates moderate cardiovascular fitness.
+                            {% else %}
+                                This may indicate reduced cardiovascular fitness.
+                            {% endif %}
+                            </p>
+                        </div>
+                        
+                        <div class="chart-container">
+                            <canvas id="hrChart"></canvas>
+                        </div>
+                        
+                        <div class="info-box">
+                            <h6><i class="bi bi-lightning-charge me-2"></i>Target Zones</h6>
+                            <ul>
+                                <li><strong>Maximum Heart Rate:</strong> 220 minus your age</li>
+                                <li><strong>Aerobic Zone:</strong> 70-80% of maximum heart rate</li>
+                                <li><strong>Anaerobic Zone:</strong> 80-90% of maximum heart rate</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- ST Depression Tab -->
+                <div class="tab-pane fade" id="st-content" role="tabpanel">
+                    <div class="fade-in">
+                        <h5 class="mb-4">ST Depression Analysis</h5>
+                        <div class="info-box">
+                            <h6><i class="bi bi-info-circle me-2"></i>Current ST Depression</h6>
+                            <p>Your current ST depression level is <strong>{{ predictions[0]['metrics']['st_depression'] }} mm</strong>. 
+                            {% if predictions[0]['metrics']['st_depression'] < 1 %}
+                                This is within the normal range.
+                            {% elif predictions[0]['metrics']['st_depression'] < 2 %}
+                                This may indicate mild ischemia.
+                            {% else %}
+                                This may indicate significant ischemia.
+                            {% endif %}
+                            </p>
+                        </div>
+                        
+                        <div class="chart-container">
+                            <canvas id="stChart"></canvas>
+                        </div>
+                        
+                        <div class="info-box">
+                            <h6><i class="bi bi-lightning-charge me-2"></i>Clinical Significance</h6>
+                            <ul>
+                                <li><strong>Normal:</strong> Less than 1 mm depression</li>
+                                <li><strong>Mild Ischemia:</strong> 1-2 mm depression</li>
+                                <li><strong>Significant Ischemia:</strong> Greater than 2 mm depression</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize charts with modern styling
+    const chartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                labels: {
+                    color: '#f3f6fa',
+                    font: {
+                        family: 'Poppins'
+                    }
+                }
+            },
+            tooltip: {
+                backgroundColor: 'rgba(26, 30, 58, 0.9)',
+                titleColor: '#7ecbff',
+                bodyColor: '#f3f6fa',
+                borderColor: 'rgba(126, 203, 255, 0.5)',
+                borderWidth: 1,
+                padding: 12,
+                cornerRadius: 8,
+                displayColors: false
+            }
+        },
+        scales: {
+            x: {
+                grid: {
+                    color: 'rgba(255,255,255,0.1)'
+                },
+                ticks: {
+                    color: '#bdbddd'
+                }
+            },
+            y: {
+                grid: {
+                    color: 'rgba(255,255,255,0.1)'
+                },
+                ticks: {
+                    color: '#bdbddd'
+                }
+            }
+        }
+    };
+    
+    // Function to create a chart with error handling
+    function createChart(ctx, data, options) {
+        try {
+            return new Chart(ctx, {
+                type: 'line',
+                data: data,
+                options: options
+            });
+        } catch (error) {
+            console.error('Error creating chart:', error);
+            return null;
+        }
+    }
+    
+    {% if timeline_data and timeline_data.dates and timeline_data.dates|length > 1 %}
+        // Get all data safely
+        const dates = {{ timeline_data.dates|tojson|safe }};
+        const riskScore = {{ timeline_data.risk_score|tojson|safe }};
+        const cholesterol = {{ timeline_data.cholesterol|tojson|safe }};
+        const bloodPressure = {{ timeline_data.blood_pressure|tojson|safe }};
+        const heartRate = {{ timeline_data.heart_rate|tojson|safe }};
+        const stDepression = {{ timeline_data.st_depression|tojson|safe }};
+        
+        // Create charts only if we have at least 2 data points
+        if (dates.length > 1) {
+            // Risk Chart
+            const riskCtx = document.getElementById('riskChart');
+            if (riskCtx) {
+                createChart(riskCtx, {
+                    labels: dates,
+                    datasets: [{
+                        label: 'Risk Score (%)',
+                        data: riskScore,
+                        backgroundColor: 'rgba(126, 203, 255, 0.2)',
+                        borderColor: 'rgb(126, 203, 255)',
+                        borderWidth: 3,
+                        tension: 0.1,
+                        pointRadius: 5,
+                        pointBackgroundColor: '#fff',
+                        pointHoverRadius: 7,
+                        fill: true
+                    }]
+                }, {
+                    ...chartOptions,
+                    scales: {
+                        ...chartOptions.scales,
+                        y: {
+                            ...chartOptions.scales.y,
+                            beginAtZero: true,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: 'Risk Score (%)',
+                                color: '#f3f6fa',
+                                font: {
+                                    weight: 'bold'
+                                }
+                            }
+                        },
+                        x: {
+                            ...chartOptions.scales.x,
+                            title: {
+                                display: true,
+                                text: 'Date',
+                                color: '#f3f6fa',
+                                font: {
+                                    weight: 'bold'
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Cholesterol Chart
+            const cholCtx = document.getElementById('cholesterolChart');
+            if (cholCtx && cholesterol.length > 1) {
+                createChart(cholCtx, {
+                    labels: dates,
+                    datasets: [{
+                        label: 'Cholesterol (mg/dl)',
+                        data: cholesterol,
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        borderColor: 'rgb(54, 162, 235)',
+                        borderWidth: 3,
+                        tension: 0.1,
+                        pointRadius: 5,
+                        pointBackgroundColor: '#fff',
+                        pointHoverRadius: 7,
+                        fill: true
+                    }]
+                }, {
+                    ...chartOptions,
+                    scales: {
+                        ...chartOptions.scales,
+                        y: {
+                            ...chartOptions.scales.y,
+                            title: {
+                                display: true,
+                                text: 'Cholesterol (mg/dl)',
+                                color: '#f3f6fa',
+                                font: {
+                                    weight: 'bold'
+                                }
+                            }
+                        },
+                        x: {
+                            ...chartOptions.scales.x,
+                            title: {
+                                display: true,
+                                text: 'Date',
+                                color: '#f3f6fa',
+                                font: {
+                                    weight: 'bold'
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Blood Pressure Chart
+            const bpCtx = document.getElementById('bpChart');
+            if (bpCtx && bloodPressure.length > 1) {
+                createChart(bpCtx, {
+                    labels: dates,
+                    datasets: [{
+                        label: 'Blood Pressure (mm Hg)',
+                        data: bloodPressure,
+                        backgroundColor: 'rgba(255, 159, 64, 0.2)',
+                        borderColor: 'rgb(255, 159, 64)',
+                        borderWidth: 3,
+                        tension: 0.1,
+                        pointRadius: 5,
+                        pointBackgroundColor: '#fff',
+                        pointHoverRadius: 7,
+                        fill: true
+                    }]
+                }, {
+                    ...chartOptions,
+                    scales: {
+                        ...chartOptions.scales,
+                        y: {
+                            ...chartOptions.scales.y,
+                            title: {
+                                display: true,
+                                text: 'Blood Pressure (mm Hg)',
+                                color: '#f3f6fa',
+                                font: {
+                                    weight: 'bold'
+                                }
+                            }
+                        },
+                        x: {
+                            ...chartOptions.scales.x,
+                            title: {
+                                display: true,
+                                text: 'Date',
+                                color: '#f3f6fa',
+                                font: {
+                                    weight: 'bold'
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Heart Rate Chart
+            const hrCtx = document.getElementById('hrChart');
+            if (hrCtx && heartRate.length > 1) {
+                createChart(hrCtx, {
+                    labels: dates,
+                    datasets: [{
+                        label: 'Heart Rate (BPM)',
+                        data: heartRate,
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        borderColor: 'rgb(75, 192, 192)',
+                        borderWidth: 3,
+                        tension: 0.1,
+                        pointRadius: 5,
+                        pointBackgroundColor: '#fff',
+                        pointHoverRadius: 7,
+                        fill: true
+                    }]
+                }, {
+                    ...chartOptions,
+                    scales: {
+                        ...chartOptions.scales,
+                        y: {
+                            ...chartOptions.scales.y,
+                            title: {
+                                display: true,
+                                text: 'Heart Rate (BPM)',
+                                color: '#f3f6fa',
+                                font: {
+                                    weight: 'bold'
+                                }
+                            }
+                        },
+                        x: {
+                            ...chartOptions.scales.x,
+                            title: {
+                                display: true,
+                                text: 'Date',
+                                color: '#f3f6fa',
+                                font: {
+                                    weight: 'bold'
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // ST Depression Chart
+            const stCtx = document.getElementById('stChart');
+            if (stCtx && stDepression.length > 1) {
+                createChart(stCtx, {
+                    labels: dates,
+                    datasets: [{
+                        label: 'ST Depression (mm)',
+                        data: stDepression,
+                        backgroundColor: 'rgba(153, 102, 255, 0.2)',
+                        borderColor: 'rgb(153, 102, 255)',
+                        borderWidth: 3,
+                        tension: 0.1,
+                        pointRadius: 5,
+                        pointBackgroundColor: '#fff',
+                        pointHoverRadius: 7,
+                        fill: true
+                    }]
+                }, {
+                    ...chartOptions,
+                    scales: {
+                        ...chartOptions.scales,
+                        y: {
+                            ...chartOptions.scales.y,
+                            title: {
+                                display: true,
+                                text: 'ST Depression (mm)',
+                                color: '#f3f6fa',
+                                font: {
+                                    weight: 'bold'
+                                }
+                            }
+                        },
+                        x: {
+                            ...chartOptions.scales.x,
+                            title: {
+                                display: true,
+                                text: 'Date',
+                                color: '#f3f6fa',
+                                font: {
+                                    weight: 'bold'
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+    {% else %}
+        // Show message when no data is available
+        const chartContainers = document.querySelectorAll('.chart-container');
+        chartContainers.forEach(container => {
+            container.innerHTML = '<div class="alert alert-info text-center">No data available for this metric. Make more predictions to see the timeline.</div>';
+        });
+    {% endif %}
+    
+    // Add event listeners to handle tab changes
+    document.querySelectorAll('[data-bs-toggle="tab"]').forEach(tab => {
+        tab.addEventListener('shown.bs.tab', event => {
+            // Re-render charts when tab becomes visible
+            const target = event.target.getAttribute('data-bs-target');
+            const chartId = target.replace('-content', 'Chart');
+            const chartElement = document.getElementById(chartId);
+            
+            if (chartElement) {
+                const chart = Chart.getChart(chartElement);
+                if (chart) {
+                    chart.update();
+                }
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,530 @@
+/* Custom styles for Heart Disease Prediction Application */
+
+body {
+    background-color: #f8f9fa;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    overflow-x: hidden;
+    min-height: 100vh;
+}
+
+/* Mobile-first responsive styles */
+@media (max-width: 576px) {
+    .container-fluid {
+        padding: 0.5rem;
+    }
+    
+    .card {
+        border-radius: 0;
+        margin: -0.5rem;
+        box-shadow: none;
+    }
+    
+    .card-body {
+        padding: 1rem;
+    }
+    
+    .form-control, .form-select {
+        font-size: 16px; /* Prevents zoom on iOS */
+        height: 45px;
+    }
+    
+    .btn {
+        width: 100%;
+        margin: 0.5rem 0;
+        height: 45px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .btn-group .btn {
+        width: auto;
+        margin: 0;
+    }
+    
+    .table-responsive {
+        margin: 0 -1rem;
+        padding: 0 1rem;
+        width: calc(100% + 2rem);
+    }
+    
+    .chart-container {
+        margin: 0 -1rem;
+        width: calc(100% + 2rem);
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .alert {
+        margin: 0.5rem -0.5rem;
+        border-radius: 0;
+    }
+}
+
+/* Tablet styles */
+@media (min-width: 577px) and (max-width: 991px) {
+    .container-fluid {
+        padding: 1rem;
+    }
+
+    .card {
+        margin-bottom: 1rem;
+    }
+}
+
+/* General styles */
+.card {
+    border-radius: 10px;
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+}
+
+.card-header {
+    background-color: #fff;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    font-weight: 600;
+    padding: 1rem;
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+.shadow {
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+.form-control, .form-select {
+    border-radius: 5px;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    transition: all 0.2s ease;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.btn-primary {
+    border-radius: 5px;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+}
+
+.alert {
+    border-radius: 10px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.footer {
+    margin-top: 3rem;
+    padding: 1rem;
+}
+
+/* Chat interface styles */
+#chat-container {
+    height: 60vh;
+    overflow-y: auto;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 10px;
+    padding: 1rem;
+}
+
+.chat-message {
+    max-width: 75%;
+    margin-bottom: 1rem;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+.message-content {
+    padding: 1rem;
+    border-radius: 15px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.chat-message.bot {
+    margin-right: auto;
+}
+
+.chat-message.user {
+    margin-left: auto;
+}
+
+.chat-message.bot .message-content {
+    background: #e9ecef;
+}
+
+.chat-message.user .message-content {
+    background: #007bff;
+    color: white;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Mobile styles */
+@media (max-width: 768px) {
+    .chat-container {
+        height: calc(100vh - 200px);
+    }
+    
+    .message {
+        max-width: 90%;
+    }
+    
+    .chat-input {
+        padding: 0.75rem;
+    }
+}
+
+/* Dashboard styles */
+.stat-card {
+    height: 100%;
+    transition: transform 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+}
+
+/* Visualization container */
+.chart-container {
+    position: relative;
+    margin: auto;
+    width: 100%;
+    max-width: 800px;
+    height: auto;
+}
+
+/* Table styles */
+.table-responsive {
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.table th, .table td {
+    padding: 1rem;
+    vertical-align: middle;
+}
+
+@media (max-width: 576px) {
+    .table th, .table td {
+        white-space: nowrap;
+        padding: 0.5rem;
+        font-size: 0.9rem;
+    }
+}
+
+/* Navigation improvements */
+.nav-link {
+    padding: 0.75rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.nav-link i {
+    font-size: 1.2rem;
+}
+
+/* Form layout improvements */
+.form-group label {
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+/* Loading spinner */
+.loading-spinner {
+    width: 3rem;
+    height: 3rem;
+}
+
+/* Container adjustments */
+.container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 15px;
+}
+
+.container-fluid {
+    width: 100%;
+    padding: 0;
+    margin: 0;
+}
+
+/* Hero Section */
+.hero-section {
+    background: linear-gradient(135deg, #dc3545 0%, #a71d2a 100%);
+    color: white;
+    padding: 2rem 0;
+    min-height: auto;
+    display: flex;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-section .container {
+    position: relative;
+    z-index: 2;
+}
+
+.hero-image {
+    width: 100%;
+    max-width: 500px;
+    height: auto;
+    object-fit: contain;
+    margin: 0 auto;
+    display: block;
+}
+
+/* Feature Cards */
+.feature-card {
+    transition: transform 0.3s ease;
+    border: none;
+    border-radius: 15px;
+    margin-bottom: 1.5rem;
+    height: 100%;
+    background: white;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+}
+
+.card-body {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.icon-bg {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+}
+
+/* Statistics Section */
+.stat-card {
+    padding: 1.5rem;
+    text-align: center;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-bottom: 1.5rem;
+    height: 100%;
+}
+
+.stat-card h2 {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+/* How It Works Section */
+.step-card {
+    padding: 1.5rem;
+    text-align: center;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    margin-bottom: 1.5rem;
+    height: 100%;
+}
+
+/* Call to Action Section */
+.cta-section {
+    background: linear-gradient(135deg, #dc3545 0%, #a71d2a 100%);
+    color: white;
+    padding: 2rem 0;
+    margin-top: 2rem;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 1200px) {
+    .container {
+        max-width: 960px;
+    }
+}
+
+@media (max-width: 992px) {
+    .container {
+        max-width: 720px;
+    }
+    
+    .hero-section {
+        padding: 3rem 0;
+    }
+    
+    .hero-image {
+        max-width: 400px;
+    }
+}
+
+@media (max-width: 768px) {
+    .container {
+        max-width: 540px;
+    }
+    
+    .hero-section {
+        padding: 2rem 0;
+        text-align: center;
+    }
+    
+    .hero-image {
+        max-width: 300px;
+        margin: 2rem auto;
+    }
+    
+    .feature-card, .stat-card, .step-card {
+        margin-bottom: 1rem;
+    }
+    
+    .stat-card h2 {
+        font-size: 1.75rem;
+    }
+    
+    .icon-bg {
+        width: 60px;
+        height: 60px;
+    }
+}
+
+@media (max-width: 576px) {
+    .container {
+        max-width: 100%;
+        padding: 0 1rem;
+    }
+    
+    .hero-section {
+        padding: 1.5rem 0;
+    }
+    
+    .hero-section h1 {
+        font-size: 2rem;
+    }
+    
+    .hero-image {
+        max-width: 250px;
+    }
+    
+    .stat-card h2 {
+        font-size: 1.5rem;
+    }
+    
+    .btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+}
+
+/* Row and column adjustments */
+.row {
+    margin: 0 -0.5rem;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.row > * {
+    padding: 0 0.5rem;
+    flex: 0 0 auto;
+    width: 100%;
+}
+
+/* Button styles */
+.btn {
+    border-radius: 30px;
+    padding: 0.5rem 1.5rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.btn-lg {
+    padding: 0.75rem 2rem;
+}
+
+/* Typography */
+h1, h2, h3 {
+    font-weight: 700;
+    margin-bottom: 1rem;
+    line-height: 1.2;
+}
+
+.lead {
+    font-size: 1.25rem;
+    font-weight: 300;
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+}
+
+/* Card text */
+.card-text {
+    margin-bottom: 1.5rem;
+    flex-grow: 1;
+}
+
+/* Sidebar Styles */
+.sidebar {
+    background-color: #343a40;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.sidebar .nav-link {
+    color: rgba(255, 255, 255, 0.8);
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    margin-bottom: 0.5rem;
+}
+
+.sidebar .nav-link:hover {
+    color: white;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Alert Styles */
+.alert {
+    border-radius: 10px;
+    border: none;
+}
+
+/* Table Styles */
+.table {
+    background-color: white;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.table th {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+}
+
+/* Tooltip Styles */
+.tooltip {
+    font-size: 0.875rem;
+}

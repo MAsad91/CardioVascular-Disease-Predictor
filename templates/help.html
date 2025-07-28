@@ -1,0 +1,588 @@
+{% extends "base_sidebar.html" %}
+
+{% block title %}Help & Support - Heart Disease Prediction{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --primary-color: #7ecbff;
+        --secondary-color: #7fffd4;
+        --bg-darker: #232946;
+        --bg-darkest: #1a1e3a;
+        --text-light: #f3f6fa;
+        --text-muted: #bdbddd;
+        --accent-color: #ff6b6b;
+        --success-color: #10b981;
+        --warning-color: #f59e0b;
+    }
+
+    body {
+        background: var(--bg-darker);
+        min-height: 100vh;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        color: var(--text-light);
+    }
+
+    .help-header {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        border-radius: 1rem;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        position: relative;
+    }
+
+    .help-header h1 {
+        color: var(--bg-darker);
+        font-weight: 700;
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+        text-shadow: none;
+    }
+
+    .help-header p {
+        color: rgba(35, 41, 70, 0.8);
+        font-size: 1.2rem;
+        margin-bottom: 0;
+        font-weight: 500;
+    }
+
+    .new-assessment-btn {
+        background: rgba(35, 41, 70, 0.2) !important;
+        border: 2px solid var(--bg-darker) !important;
+        color: var(--bg-darker) !important;
+        font-weight: 600;
+        font-size: 0.875rem;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        position: absolute;
+        top: 2rem;
+        right: 2rem;
+    }
+
+    .new-assessment-btn:hover {
+        background: var(--bg-darker) !important;
+        color: var(--text-light) !important;
+        border-color: var(--bg-darker) !important;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(35, 41, 70, 0.3);
+    }
+
+    .new-assessment-btn:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(35, 41, 70, 0.3);
+    }
+
+    .new-assessment-btn i {
+        font-size: 1rem;
+    }
+
+    .help-section {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 1rem;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        transition: all 0.3s ease;
+    }
+
+    .help-section:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        border-color: var(--primary-color);
+    }
+
+    .help-section h3 {
+        color: var(--primary-color);
+        font-weight: 700;
+        font-size: 1.8rem;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .help-section h4 {
+        color: var(--secondary-color);
+        font-weight: 600;
+        font-size: 1.3rem;
+        margin: 1.5rem 0 1rem 0;
+    }
+
+    .help-section p {
+        color: var(--text-light);
+        line-height: 1.7;
+        margin-bottom: 1rem;
+        font-size: 1.05rem;
+    }
+
+    .help-section ol, .help-section ul {
+        padding-left: 1.5rem;
+    }
+
+    .help-section li {
+        color: var(--text-light);
+        margin-bottom: 0.8rem;
+        line-height: 1.6;
+    }
+
+    .help-section li strong {
+        color: var(--primary-color);
+        font-weight: 600;
+    }
+
+    .faq-item {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 0.8rem;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .faq-item:hover {
+        transform: translateY(-2px);
+        border-color: var(--secondary-color);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .faq-question {
+        color: var(--primary-color);
+        font-weight: 600;
+        font-size: 1.1rem;
+        margin-bottom: 0.8rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .faq-answer {
+        color: var(--text-light);
+        line-height: 1.6;
+        font-size: 1rem;
+    }
+
+    .quick-links {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin: 2rem 0;
+    }
+
+    .quick-link-card {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 0.8rem;
+        padding: 1.5rem;
+        text-align: center;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .quick-link-card:hover {
+        transform: translateY(-5px);
+        border-color: var(--primary-color);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .quick-link-icon {
+        font-size: 2.5rem;
+        color: var(--secondary-color);
+        margin-bottom: 1rem;
+    }
+
+    .quick-link-title {
+        color: var(--text-light);
+        font-weight: 600;
+        font-size: 1.2rem;
+        margin-bottom: 0.8rem;
+    }
+
+    .quick-link-desc {
+        color: var(--text-muted);
+        line-height: 1.6;
+        font-size: 0.95rem;
+    }
+
+    .contact-card {
+        background: linear-gradient(135deg, rgba(126, 203, 255, 0.15), rgba(127, 255, 212, 0.1));
+        border: 1px solid rgba(126, 203, 255, 0.3);
+        border-radius: 0.8rem;
+        padding: 1.5rem;
+        margin: 1.5rem 0;
+        border-left: 4px solid var(--primary-color);
+    }
+
+    .emergency-card {
+        background: linear-gradient(135deg, rgba(255, 107, 107, 0.15), rgba(239, 68, 68, 0.1));
+        border: 1px solid rgba(255, 107, 107, 0.3);
+        border-radius: 0.8rem;
+        padding: 1.5rem;
+        margin: 1.5rem 0;
+        border-left: 4px solid var(--accent-color);
+    }
+
+    .emergency-card h4 {
+        color: var(--accent-color) !important;
+        margin-top: 0;
+    }
+
+    .step-number {
+        background: var(--primary-color);
+        color: var(--bg-darker);
+        width: 2rem;
+        height: 2rem;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        margin-right: 0.5rem;
+    }
+
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    .spin {
+        animation: spin 1s linear infinite;
+    }
+
+    @media (max-width: 768px) {
+        .help-header {
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .help-header h1 {
+            font-size: 2rem;
+        }
+
+        .new-assessment-btn {
+            position: static;
+            margin-top: 1rem;
+        }
+
+        .quick-links {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="container mt-4">
+    <!-- Header Section -->
+    <div class="help-header">
+        <button class="btn btn-outline-dark btn-sm new-assessment-btn" onclick="startNewAssessment()" title="Start New Assessment">
+            <i class="bi bi-arrow-clockwise"></i> New Assessment
+        </button>
+        <h1>
+            <i class="bi bi-question-circle-fill me-3"></i>
+            Help & Support
+        </h1>
+        <p>Complete guide to using the Heart Disease Prediction System</p>
+    </div>
+
+    <!-- Quick Links -->
+    <div class="quick-links">
+        <a href="{{ url_for('chat_assessment') }}" class="quick-link-card">
+            <div class="quick-link-icon">
+                <i class="bi bi-chat-heart-fill"></i>
+            </div>
+            <div class="quick-link-title">Chat Assessment</div>
+            <div class="quick-link-desc">Interactive symptom analysis with AI guidance</div>
+        </a>
+        
+        <a href="{{ url_for('risk_assessment') }}" class="quick-link-card">
+            <div class="quick-link-icon">
+                <i class="bi bi-clipboard2-pulse-fill"></i>
+            </div>
+            <div class="quick-link-title">Detailed Assessment</div>
+            <div class="quick-link-desc">Comprehensive form-based risk evaluation</div>
+        </a>
+        
+        <a href="{{ url_for('quick_assessment') }}" class="quick-link-card">
+            <div class="quick-link-icon">
+                <i class="bi bi-speedometer2"></i>
+            </div>
+            <div class="quick-link-title">Quick Assessment</div>
+            <div class="quick-link-desc">Fast screening with essential metrics</div>
+        </a>
+        
+        <a href="{{ url_for('about') }}" class="quick-link-card">
+            <div class="quick-link-icon">
+                <i class="bi bi-info-circle-fill"></i>
+            </div>
+            <div class="quick-link-title">About System</div>
+            <div class="quick-link-desc">Learn about our AI technology</div>
+        </a>
+    </div>
+
+    <!-- Getting Started -->
+    <div class="help-section">
+        <h3>
+            <i class="bi bi-play-circle-fill"></i>
+            Getting Started
+        </h3>
+        <p>
+            Welcome to the Heart Disease Prediction System! This AI-powered platform helps assess your cardiovascular risk using advanced machine learning algorithms. Here's how to get started:
+        </p>
+        
+        <h4>Choose Your Assessment Method:</h4>
+        <ol>
+            <li>
+                <strong><span class="step-number">1</span>Chat Assessment:</strong> 
+                Perfect for describing symptoms in natural language. Our AI will guide you through questions and provide personalized recommendations.
+            </li>
+            <li>
+                <strong><span class="step-number">2</span>Quick Assessment:</strong> 
+                Ideal for fast screening using 4 essential health metrics with smart defaults for accuracy.
+            </li>
+            <li>
+                <strong><span class="step-number">3</span>Detailed Assessment:</strong> 
+                Comprehensive evaluation using all 14 clinical parameters for the most accurate prediction.
+            </li>
+        </ol>
+    </div>
+
+    <!-- How to Use Professional Cardiovascular Consultation -->
+    <div class="help-section">
+        <h3>
+            <i class="bi bi-chat-heart-fill"></i>
+            Professional Cardiovascular Consultation
+        </h3>
+        <p>
+            Our enhanced Chat Assessment now provides a professional, doctor-like consultation experience with comprehensive cardiovascular evaluation:
+        </p>
+        
+        <h4>Consultation Process:</h4>
+        <ol>
+            <li><strong>Professional Greeting:</strong> Begin with Dr. Assistant who will guide you through a structured medical consultation</li>
+            <li><strong>Chief Complaint:</strong> Describe your main concern or reason for seeking assessment</li>
+            <li><strong>Detailed Symptom Analysis:</strong> Provide comprehensive details about any symptoms you're experiencing</li>
+            <li><strong>Medical History:</strong> Share your medical background, current medications, and existing conditions</li>
+            <li><strong>Risk Factor Assessment:</strong> Discuss lifestyle factors, family history, and other relevant information</li>
+            <li><strong>Professional Assessment:</strong> Receive a detailed clinical impression with specific recommendations</li>
+        </ol>
+        
+        <div class="contact-card">
+            <h4>What Makes This Professional:</h4>
+            <ul>
+                <li><strong>Medical Terminology:</strong> Uses appropriate clinical language and assessment methods</li>
+                <li><strong>Structured Interview:</strong> Follows a systematic approach similar to real medical consultations</li>
+                <li><strong>Emergency Detection:</strong> Immediate identification of potentially serious conditions</li>
+                <li><strong>Comprehensive Questions:</strong> Explores symptom characteristics, duration, triggers, and patterns</li>
+                <li><strong>Clinical Reasoning:</strong> Provides professional-level assessment and recommendations</li>
+                <li><strong>Follow-up Guidance:</strong> Offers specific next steps based on your presentation</li>
+            </ul>
+        </div>
+        
+        <div class="alert alert-info">
+            <h5><i class="bi bi-info-circle"></i> Important Disclaimer:</h5>
+            <p>While this consultation provides professional-level guidance, it is for educational purposes only and does not replace actual medical care. Always consult with qualified healthcare professionals for medical diagnosis and treatment.</p>
+        </div>
+    </div>
+
+    <!-- Understanding Results -->
+    <div class="help-section">
+        <h3>
+            <i class="bi bi-graph-up-arrow"></i>
+            Understanding Your Results
+        </h3>
+        
+        <h4>Risk Levels:</h4>
+        <ul>
+            <li><strong style="color: #10b981;">Low Risk:</strong> Minimal cardiovascular concerns. Continue healthy lifestyle practices.</li>
+            <li><strong style="color: #f59e0b;">Medium Risk:</strong> Some risk factors present. Consider lifestyle modifications and regular monitoring.</li>
+            <li><strong style="color: #ff6b6b;">High Risk:</strong> Significant risk factors identified. Recommend consultation with healthcare provider.</li>
+        </ul>
+        
+        <h4>What Your Results Include:</h4>
+        <ul>
+            <li><strong>Risk Probability:</strong> Percentage likelihood based on your health data</li>
+            <li><strong>Key Risk Factors:</strong> Specific parameters contributing to your risk level</li>
+            <li><strong>Personalized Recommendations:</strong> Tailored advice based on your profile</li>
+            <li><strong>Next Steps:</strong> Actionable guidance for health improvement</li>
+        </ul>
+    </div>
+
+    <!-- Frequently Asked Questions -->
+    <div class="help-section">
+        <h3>
+            <i class="bi bi-patch-question-fill"></i>
+            Frequently Asked Questions
+        </h3>
+        
+        <div class="faq-item">
+            <div class="faq-question">
+                <i class="bi bi-chevron-right"></i>
+                How accurate are the predictions?
+            </div>
+            <div class="faq-answer">
+                Our AI model achieves 95% accuracy using the K-Nearest Neighbors algorithm trained on the Cleveland Heart Disease dataset. However, this is a screening tool and should not replace professional medical diagnosis.
+            </div>
+        </div>
+        
+        <div class="faq-item">
+            <div class="faq-question">
+                <i class="bi bi-chevron-right"></i>
+                Is my health data secure?
+            </div>
+            <div class="faq-answer">
+                Yes, we take data privacy seriously. All health information is processed locally and securely. No personal data is shared with third parties without your explicit consent.
+            </div>
+        </div>
+        
+        <div class="faq-item">
+            <div class="faq-question">
+                <i class="bi bi-chevron-right"></i>
+                Can I use this system multiple times?
+            </div>
+            <div class="faq-answer">
+                Absolutely! You can perform multiple assessments to track changes in your health status over time. Use the "New Assessment" button to start fresh anytime.
+            </div>
+        </div>
+        
+        <div class="faq-item">
+            <div class="faq-question">
+                <i class="bi bi-chevron-right"></i>
+                What should I do with high-risk results?
+            </div>
+            <div class="faq-answer">
+                High-risk results indicate you should consult with a healthcare professional promptly. The system provides specific recommendations and next steps to discuss with your doctor.
+            </div>
+        </div>
+        
+        <div class="faq-item">
+            <div class="faq-question">
+                <i class="bi bi-chevron-right"></i>
+                Do I need medical knowledge to use this system?
+            </div>
+            <div class="faq-answer">
+                No medical expertise required! The Chat Assessment allows you to describe symptoms in plain language, while other assessments provide helpful explanations for all medical terms.
+            </div>
+        </div>
+    </div>
+
+    <!-- Technical Support -->
+    <div class="help-section">
+        <h3>
+            <i class="bi bi-tools"></i>
+            Technical Support
+        </h3>
+        
+        <h4>Common Issues & Solutions:</h4>
+        <ul>
+            <li><strong>Assessment not loading:</strong> Refresh the page and try again. Ensure JavaScript is enabled.</li>
+            <li><strong>Results not displaying:</strong> Check your internet connection and try submitting again.</li>
+            <li><strong>Form validation errors:</strong> Ensure all required fields are completed with valid values.</li>
+            <li><strong>Chat not responding:</strong> Reload the page and restart the conversation.</li>
+        </ul>
+        
+        <div class="contact-card">
+            <h4>System Requirements:</h4>
+            <ul>
+                <li>Modern web browser (Chrome, Firefox, Safari, Edge)</li>
+                <li>JavaScript enabled</li>
+                <li>Stable internet connection</li>
+                <li>Cookies enabled for session management</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Emergency Information -->
+    <div class="help-section">
+        <div class="emergency-card">
+            <h4>
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                Emergency Information
+            </h4>
+            <p>
+                <strong>This system is for screening and risk assessment only.</strong> If you're experiencing any of the following symptoms, seek immediate medical attention:
+            </p>
+            <ul>
+                <li>Severe chest pain or pressure</li>
+                <li>Difficulty breathing or shortness of breath</li>
+                <li>Pain radiating to arm, jaw, or back</li>
+                <li>Sudden severe headache</li>
+                <li>Loss of consciousness or severe dizziness</li>
+                <li>Rapid or irregular heartbeat with symptoms</li>
+            </ul>
+            <p>
+                <strong>Call emergency services (911) immediately if experiencing these symptoms.</strong>
+            </p>
+        </div>
+    </div>
+
+    <!-- Contact Information -->
+    <div class="help-section text-center">
+        <h3>
+            <i class="bi bi-envelope-fill"></i>
+            Need More Help?
+        </h3>
+        <p class="mb-4">If you can't find the answer to your question, we're here to help!</p>
+        
+        <div class="contact-card">
+            <h4>Remember:</h4>
+            <p>
+                This system is designed to support and enhance your healthcare journey, not replace professional medical care. Always consult with qualified healthcare providers for comprehensive medical evaluation and treatment.
+            </p>
+        </div>
+    </div>
+</div>
+
+<script>
+function startNewAssessment() {
+    // Show confirmation dialog to avoid accidental resets
+    if (confirm('Are you sure you want to start a new assessment? This will navigate to the assessment page.')) {
+        // Add loading message
+        const newAssessmentBtn = document.querySelector('.new-assessment-btn');
+        if (newAssessmentBtn) {
+            newAssessmentBtn.innerHTML = '<i class="bi bi-arrow-clockwise spin"></i> Starting...';
+            newAssessmentBtn.disabled = true;
+        }
+        
+        // Navigate to chat assessment
+        setTimeout(() => {
+            window.location.href = "{{ url_for('chat_assessment') }}";
+        }, 500);
+    }
+}
+
+// Add interactive behavior to FAQ items
+document.addEventListener('DOMContentLoaded', function() {
+    const faqItems = document.querySelectorAll('.faq-item');
+    
+    faqItems.forEach(item => {
+        const question = item.querySelector('.faq-question');
+        const chevron = question.querySelector('.bi-chevron-right');
+        
+        item.addEventListener('click', function() {
+            // Toggle rotation of chevron
+            if (chevron.style.transform === 'rotate(90deg)') {
+                chevron.style.transform = 'rotate(0deg)';
+                chevron.style.color = 'var(--primary-color)';
+            } else {
+                chevron.style.transform = 'rotate(90deg)';
+                chevron.style.color = 'var(--secondary-color)';
+            }
+        });
+    });
+    
+    // Add smooth transitions to chevrons
+    const chevrons = document.querySelectorAll('.faq-question .bi-chevron-right');
+    chevrons.forEach(chevron => {
+        chevron.style.transition = 'transform 0.3s ease, color 0.3s ease';
+    });
+});
+</script>
+{% endblock %} 

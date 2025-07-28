@@ -1,0 +1,600 @@
+{% extends "base_sidebar.html" %}
+
+{% block title %}Explanation - Heart Disease Prediction{% endblock %}
+
+{% block content %}
+<style>
+    .container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+
+    .card {
+        background: var(--glass-bg);
+        backdrop-filter: blur(var(--glass-blur));
+        border: 1.5px solid var(--divider-color);
+        border-radius: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.18);
+    }
+
+    .card-header {
+        background: rgba(255, 255, 255, 0.05);
+        border-bottom: 1.5px solid var(--divider-color);
+        padding: 1.5rem;
+        border-radius: 1.5rem 1.5rem 0 0;
+    }
+
+    .card-header h3, .card-header h4 {
+        color: var(--primary-color);
+        margin: 0;
+        font-weight: 600;
+    }
+
+    .card-body {
+        padding: 1.5rem;
+        color: #f3f6fa;
+    }
+
+    .alert {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--divider-color);
+        color: #f3f6fa;
+        border-radius: 1rem;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .alert-info {
+        border-left: 4px solid var(--primary-color);
+    }
+
+    .risk-summary-card {
+        background: var(--glass-bg);
+        border: 1.5px solid var(--divider-color);
+        border-radius: 1.5rem;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+
+    .risk-level {
+        color: var(--primary-color);
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+    }
+
+    .risk-type {
+        color: #f3f6fa;
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        text-shadow: 0 2px 8px rgba(126, 203, 255, 0.3);
+    }
+
+    .risk-probability {
+        color: var(--hover-color);
+        font-size: 3.5rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+    }
+
+    .risk-description {
+        color: #bdbddd;
+        font-size: 1.1rem;
+        line-height: 1.6;
+    }
+
+    .table {
+        color: #f3f6fa;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 1rem;
+        overflow: hidden;
+    }
+
+    .table th {
+        background: rgba(126, 203, 255, 0.1);
+        color: var(--primary-color);
+        font-weight: 600;
+        border-color: var(--divider-color);
+    }
+
+    .table td {
+        border-color: var(--divider-color);
+    }
+
+    .accordion {
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 1rem;
+        overflow: hidden;
+    }
+
+    .accordion-item {
+        background: transparent;
+        border: 1px solid var(--divider-color);
+    }
+
+    .accordion-button {
+        background: rgba(126, 203, 255, 0.1);
+        color: var(--primary-color);
+        font-weight: 600;
+    }
+
+    .accordion-button:not(.collapsed) {
+        background: rgba(126, 203, 255, 0.15);
+        color: var(--hover-color);
+    }
+
+    .accordion-body {
+        background: rgba(255, 255, 255, 0.03);
+        color: #f3f6fa;
+    }
+
+    .list-group-item {
+        background: rgba(255, 255, 255, 0.03);
+        border-color: var(--divider-color);
+        color: #f3f6fa;
+    }
+
+    .badge {
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        font-weight: 600;
+    }
+
+    .badge.bg-danger {
+        background: rgba(255, 107, 107, 0.2) !important;
+        color: #ff6b6b;
+    }
+
+    .badge.bg-warning {
+        background: rgba(255, 215, 0, 0.2) !important;
+        color: #ffd700;
+    }
+
+    .badge.bg-success {
+        background: rgba(127, 255, 212, 0.2) !important;
+        color: #7fffd4;
+    }
+
+    .btn-primary {
+        background: var(--accent-gradient);
+        border: none;
+        color: var(--bg-dark);
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.8rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(126, 203, 255, 0.3);
+    }
+
+    .btn-secondary {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid var(--divider-color);
+        color: #f3f6fa;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.8rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.15);
+        color: var(--primary-color);
+    }
+
+    .img-fluid {
+        border-radius: 1rem;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    @media (max-width: 768px) {
+        .container {
+            margin: 1rem auto;
+        }
+        
+        .card {
+            margin-bottom: 1.5rem;
+        }
+        
+        .risk-type {
+            font-size: 2rem;
+        }
+        
+        .risk-probability {
+            font-size: 2.5rem;
+        }
+    }
+
+    .boxplot-card {
+        background: #fff;
+        border-radius: 1.2rem;
+        box-shadow: 0 4px 24px rgba(35,41,70,0.10);
+        padding: 1.5rem 1.2rem;
+        margin-bottom: 1rem;
+        text-align: center;
+        border: 1px solid #f0f0f0;
+    }
+    .boxplot-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #232946;
+        margin-bottom: 0.5rem;
+    }
+</style>
+
+<div class="container">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3>Understanding Your Heart Disease Risk Prediction</h3>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <p>This explanation shows how we arrived at this prediction using machine learning models.</p>
+                    </div>
+
+                    {% if explanation.assessment_type in ['quick_form', 'quick_assessment'] %}
+                        <!-- QUICK ASSESSMENT: Show summary, graphs, and download/back buttons -->
+                        <div class="risk-summary-card">
+                            <div class="risk-level">Risk Level: {{ explanation['risk_level'] }}</div>
+                            <div class="risk-type">Quick Assessment Model</div>
+                            <div class="risk-probability">{{ (explanation.probability * 100) | round(1) }}%</div>
+                            <div class="risk-description">{{ explanation.risk_description }}</div>
+                        </div>
+                        
+                        <!-- Key Risk Factors Chart -->
+                        {% if explanation.key_risk_factors_img %}
+                        <div class="card">
+                            <div class="card-header">
+                                <h4>Key Risk Factors</h4>
+                            </div>
+                            <div class="card-body">
+                                <div class="text-center">
+                                    <img src="data:image/png;base64,{{ explanation.key_risk_factors_img }}" alt="Key Risk Factors" class="img-fluid">
+                                </div>
+                                <div class="chart-explanation mt-3">
+                                    <p>{{ explanation.get('key_risk_factors_explanation', 'These are the most significant factors contributing to your heart disease risk. Higher scores indicate greater influence on your risk profile.') }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Feature Impact Analysis -->
+                        {% if explanation.risk_factor_img %}
+                        <div class="card">
+                            <div class="card-header">
+                                <h4>Feature Impact Analysis</h4>
+                            </div>
+                            <div class="card-body">
+                                <div class="text-center">
+                                    <img src="data:image/png;base64,{{ explanation.risk_factor_img }}" alt="Feature Impact Analysis" class="img-fluid">
+                                </div>
+                                <div class="chart-explanation mt-3">
+                                    <p>{{ explanation.get('feature_impact_explanation', 'This chart shows how your health parameters impact your overall risk assessment based on their importance and your specific values.') }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Comparison with Similar Cases -->
+                        {% if explanation.boxplots %}
+                        <div class="card">
+                            <div class="card-header">
+                                <h4>Comparison with Similar Cases</h4>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    {% for feature in ['age', 'sex', 'trestbps', 'chol', 'thalach', 'oldpeak'] %}
+                                    {% if explanation.boxplots and explanation.boxplots[feature] %}
+                                    <div class="col-md-6 mb-4">
+                                        <div class="boxplot-card">
+                                            <div class="boxplot-title">Comparison for {{ feature|replace('_', ' ')|title }}</div>
+                                            <img src="data:image/png;base64,{{ explanation.boxplots[feature] }}" alt="Boxplot for {{ feature }}" class="img-fluid" />
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                    {% endfor %}
+                                </div>
+                                <div class="chart-explanation mt-3">
+                                    <p>{{ explanation.get('comparison_explanation', 'This section compares your health metrics to those of similar patients. If your values are outside the typical range, it may indicate higher or lower risk compared to your peers.') }}</p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="card">
+                            <div class="card-header">
+                                <h4>How was this calculated?</h4>
+                            </div>
+                            <div class="card-body">
+                                <p>This result was generated using a streamlined AI model trained on the most important health features you provided. For a more comprehensive analysis, please complete the detailed assessment.</p>
+                                <ul>
+                                    <li><b>Model Used:</b> Random Forest (Quick Assessment)</li>
+                                    <li><b>Features Considered:</b> Age, Sex, Resting Blood Pressure, Cholesterol, Max Heart Rate, ST Depression</li>
+                                </ul>
+                                {% if not is_admin_view %}
+                                <a href="/risk_assessment" class="btn btn-primary mt-2">Try Detailed Assessment</a>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="text-center mt-4">
+                            {% if is_admin_view %}
+                            <a href="{{ url_for('admin_download_report', session_id=session_id) }}" class="btn btn-primary">
+                                <i class="bi bi-download"></i> Download Full Report
+                            </a>
+                            <a href="{{ url_for('admin_all_reports') }}" class="btn btn-secondary ms-2">
+                                <i class="bi bi-arrow-left"></i> Back to Reports
+                            </a>
+                            {% else %}
+                            <a href="{{ url_for('download_report', session_id=session_id) }}" class="btn btn-primary">
+                                <i class="bi bi-download"></i> Download Full Report
+                            </a>
+                            <a href="{{ url_for('index') }}" class="btn btn-secondary ms-2">
+                                <i class="bi bi-house"></i> Back to Home
+                            </a>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <!-- DETAILED ASSESSMENT: Show all detailed sections as before -->
+                        <!-- Risk Assessment Summary Card -->
+                        <div class="risk-summary-card">
+                            <div class="risk-level">Risk Level: {{ explanation['risk_level'] }}</div>
+                            <div class="risk-type">{{ explanation.risk_type }}</div>
+                            <div class="risk-probability">{{ (explanation.probability * 100) | round(1) }}%</div>
+                            <div class="risk-description">{{ explanation.risk_description }}</div>
+                        </div>
+                        <!-- Detailed Analysis Section -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h4>Detailed Analysis</h4>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h5 class="text-primary">Model Consensus</h5>
+                                        <p>Our system uses three different machine learning models to provide a more reliable prediction:</p>
+                                        <div class="table-responsive">
+                                            <table class="table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Model</th>
+                                                        <th>Risk Assessment</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td>KNN Model</td>
+                                                        <td>{{ knn_probability|default(0)|round(2) }}% Risk ({{ knn_risk|default('Unknown') }})</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>Random Forest Model</td>
+                                                        <td>{{ rf_probability|default(0)|round(2) }}% Risk ({{ rf_risk|default('Unknown') }})</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>XGBoost Model</td>
+                                                        <td>{{ xgb_probability|default(0)|round(2) }}% Risk ({{ xgb_risk|default('Unknown') }})</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h5 class="text-primary">Model Explanations</h5>
+                                        <div class="accordion" id="modelExplanations">
+                                            <div class="accordion-item">
+                                                <h2 class="accordion-header">
+                                                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#knnExplanation">
+                                                        KNN Model Details
+                                                    </button>
+                                                </h2>
+                                                <div id="knnExplanation" class="accordion-collapse collapse show" data-bs-parent="#modelExplanations">
+                                                    <div class="accordion-body">
+                                                        {{ explanation.get('model_insights', {}).get('knn', {}).get('explanation_text', 'No detailed explanation available for KNN.') }}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="accordion-item">
+                                                <h2 class="accordion-header">
+                                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#rfExplanation">
+                                                        Random Forest Details
+                                                    </button>
+                                                </h2>
+                                                <div id="rfExplanation" class="accordion-collapse collapse" data-bs-parent="#modelExplanations">
+                                                    <div class="accordion-body">
+                                                        {{ explanation.get('model_insights', {}).get('random_forest', {}).get('explanation_text', 'No detailed explanation available for Random Forest.') }}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="accordion-item">
+                                                <h2 class="accordion-header">
+                                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#xgbExplanation">
+                                                        XGBoost Details
+                                                    </button>
+                                                </h2>
+                                                <div id="xgbExplanation" class="accordion-collapse collapse" data-bs-parent="#modelExplanations">
+                                                    <div class="accordion-body">
+                                                        {{ explanation.get('model_insights', {}).get('xgboost', {}).get('explanation_text', 'No detailed explanation available for XGBoost.') }}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Key Risk Factors Analysis Section -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h4>Key Risk Factors Analysis</h4>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <h5 class="text-primary">Top Risk Factors</h5>
+                                        <ul class="list-group">
+                                            {% for feature, data in explanation.get('key_factors', {}).items() %}
+                                            <li class="list-group-item">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <strong>{{ feature|replace('_', ' ')|title }}</strong>
+                                                    <span class="badge {% if data['risk_level'] == 'high' %}bg-danger{% elif data['risk_level'] == 'medium' %}bg-warning{% else %}bg-success{% endif %}">
+                                                        {{ data['risk_level']|title }}
+                                                    </span>
+                                                </div>
+                                                <p class="mb-0 mt-2">{{ data.description }}</p>
+                                            </li>
+                                    {% endfor %}
+                                </ul>
+                                    </div>
+                                    <div class="col-md-6">
+                                        {% if explanation.feature_importance_img %}
+                                        <div class="text-center">
+                                            <h5 class="text-primary">Feature Importance Visualization</h5>
+                                            <img src="data:image/png;base64,{{ explanation.feature_importance_img }}" alt="Feature Importance" class="img-fluid">
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="chart-explanation mt-3" style="background: yellow; color: black; font-size: 2rem; font-weight: bold; padding: 1rem; border-radius: 1rem;">
+                                    TEST EXPLANATION HERE: Key Risk Factors
+                                    <br>
+                                    <span style="font-size: 1.2rem; color: black;">{{ explanation.get('key_risk_factors_explanation', 'These are the most significant factors contributing to your heart disease risk. Higher scores indicate greater influence on your risk profile. Review each factor to understand where your main risks lie.') }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Feature Impact Analysis Section -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h4>Feature Impact Analysis</h4>
+                            </div>
+                            <div class="card-body">
+                                <div class="text-center">
+                                    {% if explanation.risk_factor_img %}
+                                    <img src="data:image/png;base64,{{ explanation.risk_factor_img }}" alt="Feature Impact Analysis" class="img-fluid">
+                                    {% endif %}
+                                </div>
+                                <div class="chart-explanation mt-3" style="background: yellow; color: black; font-size: 2rem; font-weight: bold; padding: 1rem; border-radius: 1rem;">
+                                    TEST EXPLANATION HERE: Feature Impact Analysis
+                                    <br>
+                                    <span style="font-size: 1.2rem; color: black;">{{ explanation.get('feature_impact_explanation', 'This chart shows how your health parameters impact your overall risk assessment based on their importance and your specific values. Features with higher impact scores are more influential in your risk prediction.') }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Comparison with Similar Cases Section -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h4>Comparison with Similar Cases</h4>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    {% for feature in ['age', 'sex', 'cp', 'trestbps', 'chol'] %}
+                                    {% if explanation.boxplots and explanation.boxplots[feature] %}
+                                    <div class="col-md-12 mb-4">
+                                        <div class="boxplot-card">
+                                            <div class="boxplot-title">Comparison for {{ feature|replace('_', ' ')|title }}</div>
+                                            <img src="data:image/png;base64,{{ explanation.boxplots[feature] }}" alt="Boxplot for {{ feature }}" class="img-fluid" />
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                    {% endfor %}
+                                </div>
+                                <div class="chart-explanation mt-3" style="background: yellow; color: black; font-size: 2rem; font-weight: bold; padding: 1rem; border-radius: 1rem;">
+                                    TEST EXPLANATION HERE: Comparison with Similar Cases
+                                    <br>
+                                    <span style="font-size: 1.2rem; color: black;">{{ explanation.get('comparison_explanation', 'This section compares your health metrics to those of similar patients. If your values are outside the typical range, it may indicate higher or lower risk compared to your peers.') }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Explanation/Summary Section -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h4>Explanation & Next Steps</h4>
+                            </div>
+                            <div class="card-body">
+                                <p>{{ explanation['explanation_text'] or explanation['risk_description'] }}</p>
+                            </div>
+                        </div>
+                        <!-- Recommendations Section -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h4>Personalized Recommendations</h4>
+                            </div>
+                            <div class="card-body">
+                                {% if explanation['risk_level'] == 'High' %}
+                                    <div class="alert alert-danger">
+                                        <strong>High Risk:</strong> We strongly recommend you consult a doctor or cardiologist as soon as possible for further evaluation and management.
+                                    </div>
+                                    <ul>
+                                        <li>Schedule an immediate appointment with your healthcare provider.</li>
+                                        <li>Monitor your blood pressure and heart rate daily.</li>
+                                        <li>Keep a symptom diary to track any chest pain or discomfort.</li>
+                                    </ul>
+                                {% elif explanation['risk_level'] == 'Low' %}
+                                    <div class="alert alert-success">
+                                        <strong>Low Risk:</strong> Your risk of heart disease is low. Maintain a healthy lifestyle to keep your heart healthy!
+                                    </div>
+                                    <ul>
+                                        <li>Continue regular physical activity.</li>
+                                        <li>Eat a balanced, heart-healthy diet.</li>
+                                        <li>Avoid smoking and limit alcohol consumption.</li>
+                                        <li>Manage stress and get regular sleep.</li>
+                                    </ul>
+                                {% else %}
+                                    <div class="alert alert-warning">
+                                        <strong>Moderate Risk:</strong> We recommend scheduling a routine check-up with your healthcare provider and following healthy lifestyle habits.
+                                    </div>
+                                    <ul>
+                                        <li>Schedule a follow-up with your healthcare provider within a week.</li>
+                                        <li>Start monitoring your vital signs regularly.</li>
+                                        <li>Review your current medications with your doctor.</li>
+                                    </ul>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="text-center mt-4">
+                            {% if is_admin_view %}
+                            <a href="{{ url_for('admin_download_report', session_id=session_id) }}" class="btn btn-primary">
+                                <i class="bi bi-download"></i> Download Full Report
+                            </a>
+                            <a href="{{ url_for('admin_all_reports') }}" class="btn btn-secondary ms-2">
+                                <i class="bi bi-arrow-left"></i> Back to Reports
+                            </a>
+                            {% else %}
+                            <a href="{{ url_for('download_report', session_id=session_id) }}" class="btn btn-primary">
+                                <i class="bi bi-download"></i> Download Full Report
+                            </a>
+                            <a href="{{ url_for('index') }}" class="btn btn-secondary ms-2">
+                                <i class="bi bi-house"></i> Back to Home
+                            </a>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+
+                    <pre>{{ explanation.boxplots | safe }}</pre>
+
+                    {% if explanation.boxplots %}
+                    print("DEBUG: boxplots keys:", list(explanation.boxplots.keys()))
+                    {% endif %}
+
+                    {% if explanation.get('key_factors', {}) %}
+                    print("DEBUG: key_factors keys:", list(explanation.get('key_factors', {}).keys()))
+                    {% endif %}
+
+                    {% set knn_risk = explanation.get('model_insights', {}).get('knn', {}).get('risk_level', 'Unknown') %}
+                    {% set rf_risk = explanation.get('model_insights', {}).get('random_forest', {}).get('risk_level', 'Unknown') %}
+                    {% set xgb_risk = explanation.get('model_insights', {}).get('xgboost', {}).get('risk_level', 'Unknown') %}
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %} 

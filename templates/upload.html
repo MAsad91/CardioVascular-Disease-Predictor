@@ -1,0 +1,342 @@
+{% extends "base_sidebar.html" %}
+
+{% block title %}Upload Medical Report - Heart Disease Prediction{% endblock %}
+
+{% block content %}
+<style>
+.content-wrapper {
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+.card {
+    margin-bottom: 1rem;
+    background: #181c2f;
+    border: none;
+}
+.card-header {
+    background: linear-gradient(135deg, #232946 0%, #232946 80%, #2d325a 100%);
+    border: none;
+}
+.card-body {
+    background: #181c2f;
+    color: #f3f6fa;
+}
+.form-control {
+    background-color: #232946;
+    border: 1px solid #2d325a;
+    color: #f3f6fa;
+}
+.form-control:focus {
+    background-color: #232946;
+    border-color: #7ecbff;
+    color: #f3f6fa;
+    box-shadow: 0 0 0 0.25rem rgba(126, 203, 255, 0.25);
+}
+.form-text {
+    color: #bdbddd !important;
+}
+.btn {
+    white-space: normal;
+    text-align: center;
+}
+.text-decoration-none {
+    color: #7ecbff !important;
+}
+.text-decoration-none:hover {
+    color: #7fffd4 !important;
+}
+.ecg-line {
+    width: 100%;
+    height: 150px;
+    background: #232946;
+    border-radius: 8px;
+    position: relative;
+    overflow: hidden;
+    margin: 1rem 0;
+}
+.ecg-line::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: #7ecbff;
+    animation: ecgWave 2s linear infinite;
+}
+
+/* Extracted Data Styles */
+.extracted-data-card {
+    background: rgba(40, 167, 69, 0.1);
+    border: 2px solid #28a745;
+    border-radius: 15px;
+    margin-bottom: 1.5rem;
+}
+
+.warning-card {
+    background: rgba(255, 193, 7, 0.1);
+    border: 2px solid #ffc107;
+    border-radius: 15px;
+    margin-bottom: 1.5rem;
+}
+
+.data-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.data-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.data-item:last-child {
+    border-bottom: none;
+}
+
+.data-label {
+    color: #f3f6fa;
+    font-weight: 500;
+}
+
+.data-value {
+    color: #7ecbff;
+    font-weight: 600;
+}
+</style>
+
+<div class="row">
+    <div class="col-md-10 offset-md-1">
+        <div class="card shadow mb-4">
+            <div class="card-header">
+                <h3 class="card-title mb-0 text-white">Upload Medical Report</h3>
+            </div>
+            <div class="card-body">
+                <p class="lead">Upload a medical report image or ECG/EKG to automatically extract patient health data.</p>
+                
+                {% if warnings %}
+                <div class="warning-card">
+                    <div class="card-body">
+                        <h5 class="text-warning"><i class="bi bi-exclamation-triangle me-2"></i>Processing Warnings</h5>
+                        <ul class="list-unstyled mb-0">
+                            {% for warning in warnings %}
+                            <li class="text-warning mb-2">{{ warning }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if extracted_data %}
+                <div class="extracted-data-card">
+                    <div class="card-body">
+                        <h5 class="text-success"><i class="bi bi-check-circle me-2"></i>Extracted Data</h5>
+                        <ul class="data-list">
+                            {% for category, data in extracted_data.items() %}
+                            <li class="mb-3">
+                                <h6 class="text-white">{{ category|title }}</h6>
+                                {% if data is mapping %}
+                                    <ul class="data-list ps-3">
+                                        {% for key, value in data.items() %}
+                                        <li class="data-item">
+                                            <span class="data-label">{{ key|title }}</span>
+                                            <span class="data-value">{{ value }}</span>
+                                        </li>
+                                        {% endfor %}
+                                    </ul>
+                                {% else %}
+                                    <div class="data-item">
+                                        <span class="data-value">{{ data }}</span>
+                                    </div>
+                                {% endif %}
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% with messages = get_flashed_messages() %}
+                    {% if messages %}
+                        <div class="alert alert-danger" role="alert">
+                            {% for message in messages %}
+                                {{ message }}
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endwith %}
+                
+                <form action="/upload" method="post" enctype="multipart/form-data" class="mt-4" id="uploadForm">
+                    <div class="mb-4">
+                        <label for="file" class="form-label">Medical Reports or ECG/EKG Images</label>
+                        <input type="file" class="form-control" id="file" name="file" accept=".jpg, .jpeg, .png, .gif, .pdf" multiple required>
+                        <div class="form-text">
+                            Upload one or more medical reports or ECG/EKG images. Supported formats: JPG, JPEG, PNG, GIF, PDF.<br>
+                            You can select multiple files by holding Ctrl (Windows) or Command (Mac) while selecting.
+                        </div>
+                    </div>
+                    
+                    <div class="preview-container mt-3 mb-3" id="previewContainer" style="display: none;">
+                        <h5>Selected Files:</h5>
+                        <div id="fileList" class="list-group">
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary btn-lg" id="uploadButton">
+                            <i class="bi bi-upload me-2"></i>Upload and Process
+                        </button>
+                    </div>
+                    
+                    <div class="text-center mt-3">
+                        <a href="/predict" class="text-decoration-none">
+                            <i class="bi bi-pencil me-1"></i>Or enter data manually
+                        </a>
+                    </div>
+                </form>
+                
+                <script>
+                // Add loading state on form submission
+                document.getElementById('uploadForm').addEventListener('submit', function(e) {
+                    const uploadButton = document.getElementById('uploadButton');
+                    const fileInput = document.getElementById('file');
+                    
+                    // Validate files
+                    const files = fileInput.files;
+                    if (!files || files.length === 0) {
+                        e.preventDefault();
+                        alert('Please select at least one file to upload.');
+                        return false;
+                    }
+                    
+                    // Check each file type
+                    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'application/pdf'];
+                    for (let i = 0; i < files.length; i++) {
+                        if (!allowedTypes.includes(files[i].type)) {
+                            e.preventDefault();
+                            alert(`Invalid file type: ${files[i].name}\nPlease upload only JPG, JPEG, PNG, GIF, or PDF files.`);
+                            return false;
+                        }
+                    }
+                    
+                    // Show loading state
+                    uploadButton.disabled = true;
+                    uploadButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+                    
+                    // Allow form to submit normally
+                    return true;
+                });
+                
+                // Add file preview on selection
+                document.getElementById('file').addEventListener('change', function(e) {
+                    const files = e.target.files;
+                    const previewContainer = document.getElementById('previewContainer');
+                    const fileList = document.getElementById('fileList');
+                    
+                    // Clear previous preview
+                    fileList.innerHTML = '';
+                    
+                    if (files.length > 0) {
+                        previewContainer.style.display = 'block';
+                        
+                        // Add each file to the preview
+                        for (let i = 0; i < files.length; i++) {
+                            const file = files[i];
+                            const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'application/pdf'];
+                            
+                            if (!allowedTypes.includes(file.type)) {
+                                alert(`Invalid file type: ${file.name}\nPlease upload only JPG, JPEG, PNG, GIF, or PDF files.`);
+                                continue;
+                            }
+                            
+                            const fileItem = document.createElement('div');
+                            fileItem.className = 'list-group-item d-flex justify-content-between align-items-center';
+                            fileItem.innerHTML = `
+                                <div>
+                                    <i class="bi ${file.type === 'application/pdf' ? 'bi-file-pdf' : 'bi-file-image'} me-2"></i>
+                                    ${file.name}
+                                </div>
+                                <span class="badge bg-primary rounded-pill">${(file.size / 1024).toFixed(1)} KB</span>
+                            `;
+                            fileList.appendChild(fileItem);
+                        }
+                    } else {
+                        previewContainer.style.display = 'none';
+                    }
+                });
+                </script>
+            </div>
+        </div>
+        
+        <!-- New Card for ECG Analysis Feature -->
+        <div class="card shadow">
+            <div class="card-header">
+                <h4 class="card-title mb-0 text-white">
+                    <i class="bi bi-heart-pulse me-2"></i>NEW: ECG/EKG Analysis
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4 text-center mb-3 mb-md-0">
+                        <i class="bi bi-activity text-info" style="font-size: 5rem;"></i>
+                        <div class="ecg-line mt-3"></div>
+                    </div>
+                    <div class="col-md-8">
+                        <h5>Advanced ECG/EKG Image Analysis</h5>
+                        <p>Our system now includes advanced analysis of ECG/EKG images to extract critical cardiac parameters:</p>
+                        <ul>
+                            <li><strong>Heart Rate</strong> - Automatically detected from R-R intervals</li>
+                            <li><strong>QT Intervals</strong> - Measurement of ventricular depolarization and repolarization</li>
+                            <li><strong>ST Elevation/Depression</strong> - Important indicators of potential cardiac issues</li>
+                        </ul>
+                        <p class="text-muted small">Simply upload an ECG/EKG image, and our system will automatically detect and analyze the waveforms.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-10 offset-md-1">
+        <div class="card shadow">
+            <div class="card-header">
+                <h4 class="card-title mb-0 text-white">Extractable Health Data</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5>From Medical Reports</h5>
+                        <ul>
+                            <li>Age</li>
+                            <li>Sex</li>
+                            <li>Blood Pressure</li>
+                            <li>Cholesterol</li>
+                            <li>Fasting Blood Sugar</li>
+                            <li>Maximum Heart Rate</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h5>From ECG/EKG Images</h5>
+                        <ul>
+                            <li>Maximum Heart Rate</li>
+                            <li>ST Depression/Elevation</li>
+                            <li>ST Segment Slope</li>
+                            <li>QT Interval Analysis</li>
+                            <li>Rhythm Assessment</li>
+                        </ul>
+                    </div>
+                </div>
+                <p class="mt-3">
+                    You'll have a chance to review and complete any missing information before prediction.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

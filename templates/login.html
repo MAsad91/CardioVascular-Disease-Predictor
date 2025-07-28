@@ -1,0 +1,177 @@
+{% extends "auth_base.html" %}
+
+{% block title %}Heart Care - Login{% endblock %}
+
+{% block content %}
+<div class="auth-card">
+    <div class="auth-header">
+        <div class="brand">
+            <img src="{{ url_for('static', filename='images/Heart Care.png') }}" alt="Heart Care">
+            <span class="brand-text">Heart Care</span>
+        </div>
+        <h1>Welcome Back</h1>
+    </div>
+
+    <div class="auth-body">
+        <!-- Only show logout message on login page -->
+        {% if logout_message %}
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle me-2"></i>
+            {{ logout_message }}
+            <button type="button" class="btn-close" onclick="this.parentElement.style.display='none'">×</button>
+        </div>
+        {% endif %}
+
+        <form method="POST" action="{{ url_for('login') }}" id="loginForm">
+            <div class="form-group">
+                <label for="username_or_email" class="form-label">
+                    <i class="bi bi-person me-2"></i>Username or Email
+                </label>
+                <input type="text" class="form-control" id="username_or_email" name="username_or_email"
+                    placeholder="Enter your username or email" required autocomplete="username">
+            </div>
+
+            <div class="form-group">
+                <label for="password" class="form-label">
+                    <i class="bi bi-lock me-2"></i>Password
+                </label>
+                <div class="input-group">
+                    <input type="password" class="form-control" id="password" name="password"
+                        placeholder="Enter your password" required autocomplete="current-password">
+                    <span class="input-group-text" id="togglePassword">
+                        <i class="bi bi-eye" id="eyeIcon"></i>
+                    </span>
+                </div>
+            </div>
+
+            <div class="form-check-row">
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="remember" name="remember">
+                    <label class="form-check-label" for="remember">
+                        Remember me
+                    </label>
+                </div>
+                <div class="forgot-link">
+                    <a href="{{ url_for('forgot_password') }}">
+                        <i class="bi bi-key me-1"></i>Forgot password?
+                    </a>
+                </div>
+            </div>
+
+            <button type="submit" class="btn-primary">
+                <i class="bi bi-box-arrow-in-right me-2"></i>
+                Sign In to Dashboard
+            </button>
+
+            <div class="divider">
+                <span>New to Heart Care?</span>
+            </div>
+
+            <a href="{{ url_for('signup') }}" class="btn-outline-primary">
+                <i class="bi bi-person-plus me-2"></i>
+                Create Your Account
+            </a>
+        </form>
+
+        <!--<div class="features-section">
+            <div class="features-grid">
+                <div class="feature-item">
+                    <i class="bi bi-clock-history"></i>
+                    <span>Track History</span>
+                </div>
+                <div class="feature-item">
+                    <i class="bi bi-shield-check"></i>
+                    <span>Secure & Private</span>
+                </div>
+                <div class="feature-item">
+                    <i class="bi bi-heart-pulse"></i>
+                    <span>AI Powered</span>
+                </div>
+            </div>
+        </div>
+        -->
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Password visibility toggle
+    document.getElementById('togglePassword').addEventListener('click', function () {
+        const password = document.getElementById('password');
+        const eyeIcon = document.getElementById('eyeIcon');
+
+        if (password.type === 'password') {
+            password.type = 'text';
+            eyeIcon.className = 'bi bi-eye-slash';
+        } else {
+            password.type = 'password';
+            eyeIcon.className = 'bi bi-eye';
+        }
+    });
+
+    // Auto-focus on first input
+    document.addEventListener('DOMContentLoaded', function () {
+        document.getElementById('username_or_email').focus();
+    });
+
+    // Form validation animation
+    const form = document.getElementById('loginForm');
+    form.addEventListener('submit', function (e) {
+        const submitBtn = form.querySelector('.btn-primary');
+        submitBtn.innerHTML = '<i class="bi bi-arrow-repeat me-2 spin"></i>Signing In...';
+        submitBtn.disabled = true;
+    });
+</script>
+
+<style>
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    .spin {
+        animation: spin 1s linear infinite;
+    }
+    
+    .form-check-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin: 1.25rem 0;
+        padding: 0.25rem 0;
+        gap: 1rem;
+    }
+    
+    .form-check-row .form-check {
+        margin: 0;
+        padding: 0;
+        margin-left: 0.5rem;
+    }
+    
+    .forgot-link a {
+        color: var(--primary-color);
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.3s ease;
+        font-size: 0.95rem;
+    }
+    
+    .forgot-link a:hover {
+        color: var(--secondary-color);
+    }
+    
+    @media (max-width: 576px) {
+        .form-check-row {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.75rem;
+        }
+    }
+</style>
+{% endblock %}

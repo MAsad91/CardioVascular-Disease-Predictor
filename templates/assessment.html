@@ -1,0 +1,960 @@
+{% extends "base_sidebar.html" %}
+
+{% block title %}Quick Assessment - Heart Disease Risk{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --primary-color: #7ecbff;
+        --secondary-color: #7fffd4;
+        --success-color: #10b981;
+        --warning-color: #f59e0b;
+        --danger-color: #ef4444;
+        --emergency-color: #dc2626;
+        --dark-color: #1f2937;
+        --light-color: #f9fafb;
+        --border-radius: 1rem;
+        --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+
+    body {
+        background: #232946;
+        min-height: 100vh;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        color: #f3f6fa;
+    }
+
+    .container {
+        padding: 2rem 0;
+    }
+
+    /* Emergency Alert */
+    .emergency-alert {
+        background: linear-gradient(135deg, rgba(220, 38, 38, 0.9), rgba(239, 68, 68, 0.8));
+        color: white;
+        padding: 1.5rem;
+        border-radius: var(--border-radius);
+        margin-bottom: 2rem;
+        text-align: center;
+        font-weight: 600;
+        box-shadow: var(--shadow-lg);
+    }
+
+    .emergency-alert h3 {
+        margin: 0 0 0.5rem 0;
+        font-size: 1.5rem;
+    }
+
+    .emergency-btn {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        padding: 1rem 2rem;
+        border-radius: 50px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+        margin-top: 1rem;
+    }
+
+    .emergency-btn:hover {
+        background: rgba(255, 255, 255, 0.3);
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    /* Assessment Options */
+    .assessment-options {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-bottom: 3rem;
+    }
+
+    .assessment-card {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: var(--border-radius);
+        padding: 2rem;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        text-align: center;
+    }
+
+    .assessment-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        border-color: var(--primary-color);
+    }
+
+    .assessment-card.active {
+        border-color: var(--primary-color);
+        background: linear-gradient(135deg, rgba(126, 203, 255, 0.2), rgba(127, 255, 212, 0.1));
+    }
+
+    .assessment-card .icon {
+        font-size: 3rem;
+        color: var(--primary-color);
+        margin-bottom: 1rem;
+    }
+
+    .assessment-card h3 {
+        color: #f3f6fa;
+        margin-bottom: 1rem;
+        font-size: 1.5rem;
+        font-weight: 600;
+    }
+
+    .assessment-card p {
+        color: #bdbddd;
+        line-height: 1.6;
+        margin-bottom: 1.5rem;
+    }
+
+    .assessment-card .features {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        text-align: left;
+    }
+
+    .assessment-card .features li {
+        color: #bdbddd;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .assessment-card .features li::before {
+        content: "✓";
+        color: var(--success-color);
+        font-weight: bold;
+    }
+
+    /* Form Styles */
+    .assessment-form {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: var(--border-radius);
+        padding: 2rem;
+        margin-top: 2rem;
+        display: none;
+    }
+
+    .assessment-form.active {
+        display: block;
+        animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        color: #f3f6fa;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 600;
+    }
+
+    .form-control, .form-select {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 0.5rem;
+        padding: 0.75rem;
+        transition: all 0.3s ease;
+        color: #f3f6fa;
+        width: 100%;
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(126, 203, 255, 0.1);
+        outline: none;
+    }
+
+    .form-control::placeholder {
+        color: #9ca3af;
+    }
+
+    .textarea-large {
+        min-height: 120px;
+        resize: vertical;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #7ecbff, #7fffd4);
+        border: none;
+        color: #232946;
+        border-radius: 50px;
+        padding: 1rem 2rem;
+        font-weight: 600;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(126, 203, 255, 0.3);
+        color: #232946;
+    }
+
+    .btn-secondary {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: #f3f6fa;
+        border-radius: 50px;
+        padding: 0.75rem 1.5rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+        margin-left: 1rem;
+    }
+
+    .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: #f3f6fa;
+        transform: translateY(-2px);
+    }
+
+    .new-assessment-btn {
+        background: rgba(255, 255, 255, 0.1) !important;
+        border: 2px solid rgba(255, 255, 255, 0.3) !important;
+        color: #f3f6fa !important;
+        font-weight: 600;
+        font-size: 0.875rem;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .new-assessment-btn:hover {
+        background: rgba(255, 255, 255, 0.2) !important;
+        color: #f3f6fa !important;
+        border-color: rgba(255, 255, 255, 0.5) !important;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1);
+    }
+
+    .new-assessment-btn:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
+    }
+
+    .new-assessment-btn i {
+        font-size: 1rem;
+    }
+
+    /* Results Display */
+    .results-container {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: var(--border-radius);
+        padding: 2rem;
+        margin-top: 2rem;
+        display: none;
+    }
+
+    .results-container.active {
+        display: block;
+        animation: slideIn 0.3s ease-out;
+    }
+
+    .risk-level {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .risk-level.low {
+        color: var(--success-color);
+    }
+
+    .risk-level.medium {
+        color: var(--warning-color);
+    }
+
+    .risk-level.high {
+        color: var(--danger-color);
+    }
+
+    .risk-level.emergency {
+        color: var(--emergency-color);
+    }
+
+    .recommendations {
+        margin-top: 2rem;
+    }
+
+    .recommendations h4 {
+        color: #f3f6fa;
+        margin-bottom: 1rem;
+    }
+
+    .recommendations ul {
+        list-style: none;
+        padding: 0;
+    }
+
+    .recommendations li {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 0.75rem;
+        margin-bottom: 0.5rem;
+        border-radius: 0.5rem;
+        border-left: 4px solid var(--primary-color);
+    }
+
+    .emergency-actions {
+        background: linear-gradient(135deg, rgba(220, 38, 38, 0.1), rgba(239, 68, 68, 0.05));
+        border: 1px solid rgba(220, 38, 38, 0.3);
+        border-radius: var(--border-radius);
+        padding: 1.5rem;
+        margin-top: 1rem;
+    }
+
+    .emergency-actions h4 {
+        color: var(--emergency-color);
+        margin-bottom: 1rem;
+    }
+
+    .emergency-actions ul {
+        list-style: none;
+        padding: 0;
+    }
+
+    .emergency-actions li {
+        background: rgba(220, 38, 38, 0.1);
+        padding: 0.75rem;
+        margin-bottom: 0.5rem;
+        border-radius: 0.5rem;
+        border-left: 4px solid var(--emergency-color);
+        color: #fca5a5;
+        font-weight: 600;
+    }
+
+    .pulse {
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% {
+            transform: scale(1);
+        }
+        50% {
+            transform: scale(1.05);
+        }
+        100% {
+            transform: scale(1);
+        }
+    }
+
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    .spin {
+        animation: spin 1s linear infinite;
+    }
+
+    @media (max-width: 768px) {
+        .container {
+            padding: 1rem 0;
+        }
+
+        .assessment-options {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        .assessment-card {
+            padding: 1.5rem;
+        }
+
+        .btn-secondary {
+            margin-left: 0;
+            margin-top: 1rem;
+        }
+    }
+</style>
+
+<div class="container mt-4">
+    <!-- Emergency Alert -->
+    <div class="emergency-alert pulse">
+        <h3>🚨 Emergency Symptoms?</h3>
+        <p>If you're experiencing severe chest pain, difficulty breathing, or other emergency symptoms:</p>
+        <a href="#" class="emergency-btn" onclick="showEmergencyProtocol()">
+            <i class="bi bi-exclamation-triangle-fill"></i>Emergency Protocol
+        </a>
+    </div>
+
+    <!-- Page Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="text-center flex-grow-1">
+            <h1 class="mb-3">
+                <i class="bi bi-heart-pulse-fill me-2" style="color: var(--primary-color);"></i>
+                Quick Heart Risk Assessment
+            </h1>
+            <p class="lead" style="color: #bdbddd;">Choose your preferred assessment method for personalized heart health insights</p>
+        </div>
+        <div class="ms-3">
+            <button class="btn btn-outline-light btn-sm new-assessment-btn" onclick="resetAssessment()" title="Start New Assessment">
+                <i class="bi bi-arrow-clockwise"></i> New Assessment
+            </button>
+        </div>
+    </div>
+
+    <!-- Assessment Options -->
+    <div class="assessment-options">
+        <!-- Symptom Analysis -->
+        <div class="assessment-card" onclick="selectAssessment('symptom')">
+            <div class="icon">
+                <i class="bi bi-chat-heart-fill"></i>
+            </div>
+            <h3>Symptom Analysis</h3>
+            <p>Describe your symptoms in natural language for intelligent risk assessment</p>
+            <ul class="features">
+                <li>AI-powered symptom interpretation</li>
+                <li>Emergency detection</li>
+                <li>Personalized recommendations</li>
+                <li>No medical knowledge required</li>
+            </ul>
+        </div>
+
+        <!-- Quick Form -->
+        <div class="assessment-card" onclick="selectAssessment('form')">
+            <div class="icon">
+                <i class="bi bi-clipboard2-pulse-fill"></i>
+            </div>
+            <h3>Quick Form</h3>
+            <p>Fast assessment using essential health metrics with smart defaults</p>
+            <ul class="features">
+                <li>4 essential fields only</li>
+                <li>Smart defaults for accuracy</li>
+                <li>AI model predictions</li>
+                <li>Detailed analysis available</li>
+            </ul>
+        </div>
+
+        <!-- Voice Assessment (Future) -->
+        <div class="assessment-card" onclick="selectAssessment('voice')">
+            <div class="icon">
+                <i class="bi bi-mic-fill"></i>
+            </div>
+            <h3>Voice Assessment</h3>
+            <p>Hands-free assessment using voice commands (Coming Soon)</p>
+            <ul class="features">
+                <li>Hands-free interaction</li>
+                <li>Accessibility focused</li>
+                <li>Voice recognition</li>
+                <li>Future feature</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Symptom Assessment Form -->
+    <div id="symptom-form" class="assessment-form">
+        <h3 class="mb-4">
+            <i class="bi bi-chat-heart-fill me-2"></i>
+            Describe Your Symptoms
+        </h3>
+        
+        <form id="symptomAssessmentForm" onsubmit="submitSymptomAssessment(event)">
+            <input type="hidden" name="assessment_type" value="symptom">
+            
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="age" class="form-label">
+                            <i class="bi bi-person-fill"></i>Age
+                        </label>
+                        <input type="number" class="form-control" name="age" required min="18" max="100" placeholder="Enter your age">
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="sex" class="form-label">
+                            <i class="bi bi-gender-ambiguous"></i>Sex
+                        </label>
+                        <select class="form-select" name="sex" required>
+                            <option value="">Select gender</option>
+                            <option value="1">Male</option>
+                            <option value="0">Female</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="col-12">
+                    <div class="form-group">
+                        <label for="symptoms" class="form-label">
+                            <i class="bi bi-journal-medical"></i>Describe Your Symptoms
+                        </label>
+                        <textarea class="form-control textarea-large" name="symptoms" required 
+                                placeholder="Describe any symptoms you're experiencing in detail. For example: 'chest pain', 'shortness of breath', 'fatigue', 'dizziness', etc. Include when they started, how severe they are, and what triggers them."></textarea>
+                        <small class="form-text" style="color: #9ca3af;">
+                            Be as detailed as possible. Include location, intensity, duration, and any triggers.
+                        </small>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center mt-4">
+                <button type="submit" class="btn-primary">
+                    <i class="bi bi-search-heart"></i>Analyze Symptoms
+                </button>
+                <button type="button" class="btn-secondary" onclick="resetAssessment()">
+                    <i class="bi bi-arrow-left"></i>Back to Options
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Quick Form Assessment -->
+    <div id="form-assessment" class="assessment-form">
+        <h3 class="mb-4">
+            <i class="bi bi-clipboard2-pulse-fill me-2"></i>
+            Quick Health Assessment
+        </h3>
+        
+        <form id="formAssessmentForm" onsubmit="submitFormAssessment(event)">
+            <input type="hidden" name="assessment_type" value="form">
+            
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="age" class="form-label">
+                            <i class="bi bi-person-fill"></i>Age
+                        </label>
+                        <input type="number" class="form-control" name="age" required min="18" max="100" placeholder="Enter your age">
+                        <small class="form-text" style="color: #9ca3af;">{{ feature_descriptions.age }}</small>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="sex" class="form-label">
+                            <i class="bi bi-gender-ambiguous"></i>Sex
+                        </label>
+                        <select class="form-select" name="sex" required>
+                            <option value="">Select gender</option>
+                            <option value="1">Male</option>
+                            <option value="0">Female</option>
+                        </select>
+                        <small class="form-text" style="color: #9ca3af;">{{ feature_descriptions.sex }}</small>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="trestbps" class="form-label">
+                            <i class="bi bi-heart"></i>Blood Pressure
+                        </label>
+                        <input type="number" class="form-control" name="trestbps" required min="90" max="200" 
+                               placeholder="120" value="{{ prefilled_data.get('trestbps', '') }}">
+                        <small class="form-text" style="color: #9ca3af;">{{ feature_descriptions.trestbps }}</small>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="chol" class="form-label">
+                            <i class="bi bi-droplet"></i>Cholesterol
+                        </label>
+                        <input type="number" class="form-control" name="chol" required min="100" max="600" 
+                               placeholder="200" value="{{ prefilled_data.get('chol', '') }}">
+                        <small class="form-text" style="color: #9ca3af;">{{ feature_descriptions.chol }}</small>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="thalach" class="form-label">
+                            <i class="bi bi-activity"></i>Maximum Heart Rate
+                        </label>
+                        <input type="number" class="form-control" name="thalach" required min="60" max="200" 
+                               placeholder="150" value="{{ prefilled_data.get('thalach', '') }}">
+                        <small class="form-text" style="color: #9ca3af;">{{ feature_descriptions.thalach }}</small>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="form-group">
+                        <label for="oldpeak" class="form-label">
+                            <i class="bi bi-graph-down"></i>ST Depression
+                        </label>
+                        <input type="number" class="form-control" name="oldpeak" required min="0" max="6.2" step="0.1" 
+                               placeholder="1.0" value="{{ prefilled_data.get('oldpeak', '') }}">
+                        <small class="form-text" style="color: #9ca3af;">{{ feature_descriptions.oldpeak }}</small>
+                    </div>
+                </div>
+                
+                {% if missing_fields %}
+                <div class="col-12">
+                    <div class="alert alert-info">
+                        <h4 class="alert-heading"><i class="bi bi-info-circle"></i> Missing Information</h4>
+                        <p>Please fill in the following fields to complete your assessment:</p>
+                        <ul>
+                            {% for field in missing_fields %}
+                            <li>{{ feature_descriptions[field] }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="text-center mt-4">
+                <button type="submit" class="btn-primary">
+                    <i class="bi bi-calculator"></i>Calculate Risk
+                </button>
+                <button type="button" class="btn-secondary" onclick="resetAssessment()">
+                    <i class="bi bi-arrow-left"></i>Back to Options
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Results Container -->
+    <div id="results-container" class="results-container">
+        <div id="results-content">
+            <!-- Results will be populated here -->
+        </div>
+    </div>
+</div>
+
+<script>
+let currentAssessment = null;
+
+function selectAssessment(type) {
+    // Hide all forms
+    document.querySelectorAll('.assessment-form').forEach(form => {
+        form.classList.remove('active');
+    });
+    
+    // Remove active class from all cards
+    document.querySelectorAll('.assessment-card').forEach(card => {
+        card.classList.remove('active');
+    });
+    
+    // Add active class to selected card
+    event.target.closest('.assessment-card').classList.add('active');
+    
+    currentAssessment = type;
+    
+    if (type === 'symptom') {
+        document.getElementById('symptom-form').classList.add('active');
+    } else if (type === 'form') {
+        document.getElementById('form-assessment').classList.add('active');
+    } else if (type === 'voice') {
+        alert('Voice assessment feature coming soon! Please try symptom analysis or quick form.');
+        resetAssessment();
+    }
+}
+
+function resetAssessment() {
+    currentAssessment = null;
+    
+    // Hide all forms and results
+    document.querySelectorAll('.assessment-form').forEach(form => {
+        form.classList.remove('active');
+    });
+    document.getElementById('results-container').classList.remove('active');
+    
+    // Remove active class from all cards
+    document.querySelectorAll('.assessment-card').forEach(card => {
+        card.classList.remove('active');
+    });
+    
+    // Clear all form fields
+    document.querySelectorAll('input[type="text"], input[type="number"], input[type="email"], textarea, select').forEach(field => {
+        field.value = '';
+    });
+    
+    // Reset select dropdowns to first option
+    document.querySelectorAll('select').forEach(select => {
+        if (select.options.length > 0) {
+            select.selectedIndex = 0;
+        }
+    });
+    
+    // Clear results content
+    const resultsContent = document.getElementById('results-content');
+    if (resultsContent) {
+        resultsContent.innerHTML = '';
+    }
+    
+    // Clear session data on server
+    fetch('/clear_assessment', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            console.log('Assessment data cleared from server');
+        } else {
+            console.error('Failed to clear assessment data:', data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error clearing assessment data:', error);
+    });
+}
+
+function submitSymptomAssessment(event) {
+    event.preventDefault();
+    
+    const formData = new FormData(event.target);
+    
+    // Show loading state
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="bi bi-hourglass-split"></i>Analyzing...';
+    submitBtn.disabled = true;
+    
+    fetch('/quick_assessment', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        displayResults(data);
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred during assessment. Please try again.');
+    })
+    .finally(() => {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    });
+}
+
+function submitFormAssessment(event) {
+    event.preventDefault();
+    
+    const formData = new FormData(event.target);
+    
+    // Show loading state
+    const submitBtn = event.target.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="bi bi-hourglass-split"></i>Calculating...';
+    submitBtn.disabled = true;
+    
+    fetch('/quick_assessment', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        displayResults(data);
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred during assessment. Please try again.');
+    })
+    .finally(() => {
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    });
+}
+
+function displayResults(data) {
+    const resultsContainer = document.getElementById('results-container');
+    const resultsContent = document.getElementById('results-content');
+    
+    let html = '';
+    
+    if (data.assessment_type === 'emergency') {
+        html = `
+            <div class="emergency-actions">
+                <h2 class="text-center mb-4" style="color: var(--emergency-color);">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    ${data.message}
+                </h2>
+                
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <h4>Immediate Actions:</h4>
+                        <ul>
+                            ${data.immediate_actions.map(action => `<li>${action}</li>`).join('')}
+                        </ul>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <h4>While Waiting for Help:</h4>
+                        <ul>
+                            ${data.while_waiting.map(action => `<li>${action}</li>`).join('')}
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="text-center mt-4">
+                    <a href="tel:911" class="btn-primary" style="background: var(--emergency-color); color: white; font-size: 1.5rem; padding: 1.5rem 3rem;">
+                        <i class="bi bi-telephone-fill me-2"></i>Call 911 Now
+                    </a>
+                </div>
+            </div>
+        `;
+    } else {
+        const riskClass = data.risk_level ? data.risk_level.toLowerCase() : 'unknown';
+        
+        html = `
+            <div class="risk-level ${riskClass}">
+                <h2 class="mb-3">
+                    <i class="bi bi-heart-pulse-fill me-2"></i>
+                    ${data.message}
+                </h2>
+                <p class="lead">${data.description || ''}</p>
+            </div>
+            
+            ${data.recommendations ? `
+                <div class="recommendations">
+                    <h4>Personalized Recommendations:</h4>
+                    <ul>
+                        ${data.recommendations.map(rec => `<li>${rec}</li>`).join('')}
+                    </ul>
+                </div>
+            ` : ''}
+            
+            ${data.next_steps ? `
+                <div class="recommendations">
+                    <h4>Next Steps:</h4>
+                    <ul>
+                        ${data.next_steps.map(step => `<li>${step}</li>`).join('')}
+                    </ul>
+                </div>
+            ` : ''}
+            
+            <div class="text-center mt-4">
+                ${data.detailed_url ? `
+                    <a href="${data.detailed_url}" class="btn-primary">
+                        <i class="bi bi-graph-up"></i>View Detailed Analysis
+                    </a>
+                ` : ''}
+                <button type="button" class="btn-secondary" onclick="resetAssessment()">
+                    <i class="bi bi-arrow-repeat"></i>New Assessment
+                </button>
+            </div>
+        `;
+    }
+    
+    resultsContent.innerHTML = html;
+    resultsContainer.classList.add('active');
+    
+    // Hide forms
+    document.querySelectorAll('.assessment-form').forEach(form => {
+        form.classList.remove('active');
+    });
+    
+    // Scroll to results
+    resultsContainer.scrollIntoView({ behavior: 'smooth' });
+}
+
+function showEmergencyProtocol() {
+    const emergencyData = {
+        assessment_type: 'emergency',
+        message: 'EMERGENCY PROTOCOL ACTIVATED',
+        immediate_actions: [
+            'Call 911 immediately',
+            'Chew 1 aspirin (unless allergic)',
+            'Sit down with back support',
+            'Loosen tight clothing',
+            'Stay calm and breathe slowly'
+        ],
+        while_waiting: [
+            'Have someone stay with you',
+            'Prepare list of medications',
+            'Note time symptoms started',
+            'Keep doors unlocked for paramedics',
+            'Gather insurance/ID cards'
+        ]
+    };
+    
+    displayResults(emergencyData);
+}
+
+function startNewAssessment() {
+    // Show confirmation dialog to avoid accidental resets
+    if (confirm('Are you sure you want to start a new assessment? This will clear the current progress.')) {
+        // Add loading message
+        const newAssessmentBtn = document.querySelector('.new-assessment-btn');
+        if (newAssessmentBtn) {
+            newAssessmentBtn.innerHTML = '<i class="bi bi-arrow-clockwise spin"></i> Starting...';
+            newAssessmentBtn.disabled = true;
+        }
+        
+        // Clear session data and reload the page
+        fetch('/clear_assessment', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                console.log('Assessment data cleared from server');
+                // Reload the page after clearing data
+                setTimeout(() => {
+                    window.location.reload();
+                }, 500);
+            } else {
+                console.error('Failed to clear assessment data:', data.error);
+                // Still reload even if clearing failed
+                setTimeout(() => {
+                    window.location.reload();
+                }, 500);
+            }
+        })
+        .catch(error => {
+            console.error('Error clearing assessment data:', error);
+            // Still reload even if clearing failed
+            setTimeout(() => {
+                window.location.reload();
+            }, 500);
+        });
+    }
+}
+
+// Initialize page
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Quick Assessment page loaded');
+});
+</script>
+{% endblock %} 

@@ -1,0 +1,1009 @@
+{% extends "base_sidebar.html" %}
+
+{% block title %}Risk Assessment - Heart Disease Prediction{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --primary-color: #7ecbff;
+        --secondary-color: #7fffd4;
+        --bg-darker: #212447;
+        --bg-darkest: #1a1e3a;
+        --text-light: #f3f6fa;
+        --text-muted: #bdbddd;
+    }
+
+    .modern-form {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        color: #2c3e50;
+        position: relative;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        color: #1a1a1a;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        font-size: 0.95rem;
+    }
+
+    .modern-select, .modern-input {
+        background: #212447;
+        border: 1px solid rgba(44, 62, 80, 0.2);
+        border-radius: 15px;
+        padding: 12px 20px;
+        font-size: 1rem;
+        color: #ffffff !important;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+        width: 100%;
+    }
+
+    .modern-select:focus, .modern-input:focus {
+        background: #212447;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        outline: none;
+        transform: translateY(-2px);
+        border-color: var(--primary-color);
+        color: #ffffff !important;
+    }
+
+    .modern-select option {
+        background: #212447;
+        color: #ffffff !important;
+        padding: 10px;
+    }
+
+    /* Fix for prefilled values */
+    .modern-select[value], .modern-input[value] {
+        color: #ffffff !important;
+        background: #212447;
+    }
+
+    .form-text {
+        color: rgba(26, 26, 26, 0.7);
+        font-size: 0.85rem;
+        margin-top: 0.25rem;
+        font-weight: 500;
+    }
+
+    .btn-assess {
+        background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+        border: none;
+        border-radius: 25px;
+        padding: 12px 30px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: white;
+        transition: all 0.3s ease;
+        box-shadow: 0 8px 20px rgba(238, 90, 82, 0.3);
+    }
+
+    .btn-assess:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 25px rgba(238, 90, 82, 0.4);
+        color: white;
+    }
+
+    .btn-clear {
+        background: rgba(255, 255, 255, 0.3);
+        border: 2px solid rgba(26, 26, 26, 0.3);
+        border-radius: 25px;
+        padding: 10px 28px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #1a1a1a;
+        transition: all 0.3s ease;
+    }
+
+    .btn-clear:hover {
+        background: rgba(255, 255, 255, 0.5);
+        border-color: rgba(26, 26, 26, 0.5);
+        transform: translateY(-2px);
+        color: #1a1a1a;
+    }
+
+    .input-mode-toggle {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin-bottom: 2rem;
+    }
+
+    .btn-toggle {
+        background: rgba(255, 255, 255, 0.3);
+        border: 2px solid rgba(44, 62, 80, 0.3);
+        border-radius: 25px;
+        padding: 10px 28px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #2c3e50;
+        transition: all 0.3s ease;
+    }
+
+    .btn-toggle:hover {
+        background: rgba(255, 255, 255, 0.5);
+        border-color: rgba(44, 62, 80, 0.5);
+        transform: translateY(-2px);
+        color: #2c3e50;
+    }
+
+    .btn-toggle.active {
+        background: rgba(255, 255, 255, 0.9);
+        color: var(--primary-color);
+        font-weight: 700;
+        border-color: var(--primary-color);
+    }
+
+    .card-header-modern {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 15px 15px 0 0;
+        border: none;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        text-align: center;
+    }
+
+    .card-header-modern h3 {
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+        font-weight: 700;
+        text-shadow: none;
+        display: block;
+    }
+
+    .card-header-modern p {
+        color: rgba(44, 62, 80, 0.8);
+        margin-bottom: 0;
+        display: block;
+    }
+
+    .input-mode-toggle span {
+        color: #1a1a1a;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .hidden {
+        display: none !important;
+    }
+
+    /* Field filled successfully */
+    .field-filled,
+    select.field-filled,
+    input.field-filled {
+        border: 2px solid #28a745 !important;
+        box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25) !important;
+        background: #212447 !important;
+    }
+
+    /* ERROR STYLING - UPDATED WITH MORE SPECIFIC SELECTORS */
+    .field-missing,
+    .field-missing.modern-select,
+    .field-missing.modern-input,
+    .field-missing.form-select,
+    .field-missing.form-control,
+    select.field-missing,
+    select.form-select.field-missing,
+    select.modern-select.field-missing {
+        border: 2px solid #dc3545 !important;
+        box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
+        animation: pulse-error 2s infinite !important;
+        background: #212447 !important;
+        background-clip: padding-box !important;
+    }
+
+    /* Animation for error fields */
+    @keyframes pulse-error {
+        0% { box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25); }
+        50% { box-shadow: 0 0 0 0.3rem rgba(220, 53, 69, 0.15); }
+        100% { box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25); }
+    }
+
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    .spin {
+        animation: spin 1s linear infinite;
+    }
+
+    .new-assessment-btn {
+        background: rgba(255, 255, 255, 0.3) !important;
+        border: 2px solid rgba(44, 62, 80, 0.4) !important;
+        color: #2c3e50 !important;
+        font-weight: 600;
+        font-size: 0.875rem;
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .new-assessment-btn:hover {
+        background: rgba(255, 255, 255, 0.5) !important;
+        color: #2c3e50 !important;
+        border-color: rgba(44, 62, 80, 0.6) !important;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(44, 62, 80, 0.2);
+    }
+
+    .new-assessment-btn:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(44, 62, 80, 0.3);
+    }
+
+    .new-assessment-btn i {
+        font-size: 1rem;
+    }
+    
+    .d-none {
+        display: none !important;
+    }
+</style>
+
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-lg-10 col-xl-8">
+            <div class="modern-form">
+                <div class="card-header-modern">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="text-center flex-grow-1">
+                            <h3 class="mb-0">Heart Disease Risk Assessment</h3>
+                            <p class="mb-0">Please provide accurate health information for the most reliable assessment</p>
+                        </div>
+                        <div class="ms-3">
+                            <button class="btn btn-outline-dark btn-sm new-assessment-btn" onclick="startNewAssessment()" title="Start New Assessment">
+                                <i class="bi bi-arrow-clockwise"></i> New Assessment
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ 'danger' if category == 'error' else 'info' }} alert-dismissible fade show mt-3" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                <!-- Extraction Status Display -->
+                {% if prefilled_data or missing_fields %}
+                <div class="row mb-4" id="extractionStatus">
+                    <!-- Extracted Fields Card -->
+                    <div class="col-md-6">
+                        <div class="card" style="background: rgba(40, 167, 69, 0.1); border: 2px solid #28a745; border-radius: 15px;">
+                            <div class="card-body">
+                                <h6 style="color: #28a745;"><i class="bi bi-check-circle-fill me-2"></i>Extracted Fields ({{ prefilled_data|length if prefilled_data else 0 }})</h6>
+                                {% if prefilled_data %}
+                                    <div class="extracted-list">
+                                        {% for field, value in prefilled_data.items() %}
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <span style="color: #2c3e50; font-weight: 500;">{{ field.replace('_', ' ')|title }}</span>
+                                                <span class="badge bg-success">{{ value }}</span>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <p style="color: #6c757d; font-style: italic;">No fields extracted</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Missing Fields Card -->
+                    <div class="col-md-6">
+                        <div class="card" style="background: rgba(220, 53, 69, 0.1); border: 2px solid #dc3545; border-radius: 15px;">
+                            <div class="card-body">
+                                <h6 style="color: #dc3545;"><i class="bi bi-exclamation-triangle-fill me-2"></i>Missing Fields ({{ missing_fields|length if missing_fields else 0 }})</h6>
+                                {% if missing_fields %}
+                                    <div class="missing-list">
+                                        {% for field in missing_fields %}
+                                            <div class="mb-1">
+                                                <span class="badge bg-warning text-dark">{{ field.replace('_', ' ')|title }}</span>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                {% else %}
+                                    <p style="color: #28a745; font-style: italic;">All fields extracted!</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                {% if missing_fields %}
+                <div class="text-center mb-3" id="missingFieldsPrompt">
+                    <p style="color: #2c3e50; margin: 0;"><strong>📝 Please fill in the missing fields below to complete your assessment</strong></p>
+                </div>
+                {% endif %}
+                {% endif %}
+
+                <!-- Input Mode Toggle -->
+                <div class="input-mode-toggle">
+                    <button type="button" class="btn btn-toggle" id="dropdownMode">
+                        <i class="bi bi-list me-2"></i>Dropdown Selection
+                    </button>
+                    <button type="button" class="btn btn-toggle active" id="manualMode">
+                        <i class="bi bi-pencil me-2"></i>Manual Entry
+                    </button>
+                </div>
+
+                <form action="{{ form_action }}" method="post" class="needs-validation mt-4" novalidate>
+                    
+                    <!-- MANUAL FORM - Now Default -->
+                    <div id="manualForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="age_manual" class="form-label">Age (years)</label>
+                                    <input type="number" class="form-control modern-input{% if missing_fields and 'age' in missing_fields %} field-missing{% endif %}" id="age_manual" name="age" 
+                                           min="20" max="100" placeholder="Enter age" 
+                                           value="{{ prefilled_data.get('age', '') if prefilled_data else '' }}" required data-missing="{{ 'true' if missing_fields and 'age' in missing_fields else 'false' }}">
+                                    <div class="form-text">Age between 20-100 years</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="sex_manual" class="form-label">Gender</label>
+                                    <select class="form-select modern-select{% if missing_fields and 'sex' in missing_fields %} field-missing{% endif %}" id="sex_manual" name="sex" required data-missing="{{ 'true' if missing_fields and 'sex' in missing_fields else 'false' }}">
+                                        <option value="">Select...</option>
+                                        <option value="0" {{ 'selected' if prefilled_data and prefilled_data.get('sex')|string == '0' else '' }}>Female</option>
+                                        <option value="1" {{ 'selected' if prefilled_data and prefilled_data.get('sex')|string == '1' else '' }}>Male</option>
+                                    </select>
+                                    <div class="form-text">Select your gender</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="cp_manual" class="form-label">Chest Pain Type</label>
+                                    <select class="form-select modern-select{% if missing_fields and 'cp' in missing_fields %} field-missing{% endif %}" id="cp_manual" name="cp" required data-missing="{{ 'true' if missing_fields and 'cp' in missing_fields else 'false' }}">
+                                        <option value="">Select...</option>
+                                        <option value="0" {{ 'selected' if prefilled_data and prefilled_data.get('cp')|string == '0' else '' }}>Typical Angina</option>
+                                        <option value="1" {{ 'selected' if prefilled_data and prefilled_data.get('cp')|string == '1' else '' }}>Atypical Angina</option>
+                                        <option value="2" {{ 'selected' if prefilled_data and prefilled_data.get('cp')|string == '2' else '' }}>Non-anginal Pain</option>
+                                        <option value="3" {{ 'selected' if prefilled_data and prefilled_data.get('cp')|string == '3' else '' }}>Asymptomatic</option>
+                                    </select>
+                                    <div class="form-text">Type of chest pain experienced</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="trestbps_manual" class="form-label">Resting Blood Pressure (mm Hg)</label>
+                                    <input type="number" class="form-control modern-input{% if missing_fields and 'trestbps' in missing_fields %} field-missing{% endif %}" id="trestbps_manual" name="trestbps" 
+                                           min="90" max="200" placeholder="Enter blood pressure"
+                                           value="{{ prefilled_data.get('trestbps', '') if prefilled_data else '' }}" required data-missing="{{ 'true' if missing_fields and 'trestbps' in missing_fields else 'false' }}">
+                                    <div class="form-text">Normal range: 90-140 mm Hg</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="chol_manual" class="form-label">Serum Cholesterol (mg/dl)</label>
+                                    <input type="number" class="form-control modern-input{% if missing_fields and 'chol' in missing_fields %} field-missing{% endif %}" id="chol_manual" name="chol" 
+                                           min="100" max="600" placeholder="Enter cholesterol level"
+                                           value="{{ prefilled_data.get('chol', '') if prefilled_data else '' }}" required data-missing="{{ 'true' if missing_fields and 'chol' in missing_fields else 'false' }}">
+                                    <div class="form-text">Normal range: 100-240 mg/dl</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="fbs_manual" class="form-label">Fasting Blood Sugar</label>
+                                    <select class="form-select modern-select{% if missing_fields and 'fbs' in missing_fields %} field-missing{% endif %}" id="fbs_manual" name="fbs" required data-missing="{{ 'true' if missing_fields and 'fbs' in missing_fields else 'false' }}">
+                                        <option value="">Select...</option>
+                                        <option value="0" {{ 'selected' if prefilled_data and prefilled_data.get('fbs')|string == '0' else '' }}>≤ 120 mg/dl (Normal)</option>
+                                        <option value="1" {{ 'selected' if prefilled_data and prefilled_data.get('fbs')|string == '1' else '' }}>> 120 mg/dl (High)</option>
+                                    </select>
+                                    <div class="form-text">Fasting blood sugar level</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="restecg_manual" class="form-label">Resting ECG</label>
+                                    <select class="form-select modern-select{% if missing_fields and 'restecg' in missing_fields %} field-missing{% endif %}" id="restecg_manual" name="restecg" required data-missing="{{ 'true' if missing_fields and 'restecg' in missing_fields else 'false' }}">
+                                        <option value="">Select...</option>
+                                        <option value="0" {{ 'selected' if prefilled_data and prefilled_data.get('restecg')|string == '0' else '' }}>Normal</option>
+                                        <option value="1" {{ 'selected' if prefilled_data and prefilled_data.get('restecg')|string == '1' else '' }}>ST-T Wave Abnormality</option>
+                                        <option value="2" {{ 'selected' if prefilled_data and prefilled_data.get('restecg')|string == '2' else '' }}>Left Ventricular Hypertrophy</option>
+                                    </select>
+                                    <div class="form-text">Resting electrocardiographic results</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="thalach_manual" class="form-label">Maximum Heart Rate</label>
+                                    <input type="number" class="form-control modern-input{% if missing_fields and 'thalach' in missing_fields %} field-missing{% endif %}" id="thalach_manual" name="thalach" 
+                                           min="60" max="200" placeholder="Enter max heart rate"
+                                           value="{{ prefilled_data.get('thalach', '') if prefilled_data else '' }}" required data-missing="{{ 'true' if missing_fields and 'thalach' in missing_fields else 'false' }}">
+                                    <div class="form-text">Maximum heart rate achieved during exercise</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="exang_manual" class="form-label">Exercise Induced Angina</label>
+                                    <select class="form-select modern-select{% if missing_fields and 'exang' in missing_fields %} field-missing{% endif %}" id="exang_manual" name="exang" required data-missing="{{ 'true' if missing_fields and 'exang' in missing_fields else 'false' }}">
+                                        <option value="">Select...</option>
+                                        <option value="0" {{ 'selected' if prefilled_data and prefilled_data.get('exang')|string == '0' else '' }}>No</option>
+                                        <option value="1" {{ 'selected' if prefilled_data and prefilled_data.get('exang')|string == '1' else '' }}>Yes</option>
+                                    </select>
+                                    <div class="form-text">Angina induced by exercise</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="oldpeak_manual" class="form-label">ST Depression</label>
+                                    <input type="number" class="form-control modern-input{% if missing_fields and 'oldpeak' in missing_fields %} field-missing{% endif %}" id="oldpeak_manual" name="oldpeak" 
+                                           min="0" max="6.2" step="0.1" placeholder="Enter ST depression"
+                                           value="{{ prefilled_data.get('oldpeak', '') if prefilled_data else '' }}" required data-missing="{{ 'true' if missing_fields and 'oldpeak' in missing_fields else 'false' }}">
+                                    <div class="form-text">ST depression induced by exercise (0-6.2)</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="slope_manual" class="form-label">ST Segment Slope</label>
+                                    <select class="form-select modern-select{% if missing_fields and 'slope' in missing_fields %} field-missing{% endif %}" id="slope_manual" name="slope" required data-missing="{{ 'true' if missing_fields and 'slope' in missing_fields else 'false' }}">
+                                        <option value="">Select...</option>
+                                        <option value="0" {{ 'selected' if prefilled_data and prefilled_data.get('slope')|string == '0' else '' }}>Upsloping</option>
+                                        <option value="1" {{ 'selected' if prefilled_data and prefilled_data.get('slope')|string == '1' else '' }}>Flat</option>
+                                        <option value="2" {{ 'selected' if prefilled_data and prefilled_data.get('slope')|string == '2' else '' }}>Downsloping</option>
+                                    </select>
+                                    <div class="form-text">Slope of peak exercise ST segment</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="ca_manual" class="form-label">Major Vessels</label>
+                                    <select class="form-select modern-select{% if missing_fields and 'ca' in missing_fields %} field-missing{% endif %}" id="ca_manual" name="ca" required data-missing="{{ 'true' if missing_fields and 'ca' in missing_fields else 'false' }}">
+                                        <option value="">Select...</option>
+                                        <option value="0" {{ 'selected' if prefilled_data and prefilled_data.get('ca')|string == '0' else '' }}>0 vessels</option>
+                                        <option value="1" {{ 'selected' if prefilled_data and prefilled_data.get('ca')|string == '1' else '' }}>1 vessel</option>
+                                        <option value="2" {{ 'selected' if prefilled_data and prefilled_data.get('ca')|string == '2' else '' }}>2 vessels</option>
+                                        <option value="3" {{ 'selected' if prefilled_data and prefilled_data.get('ca')|string == '3' else '' }}>3 vessels</option>
+                                    </select>
+                                    <div class="form-text">Number of major vessels colored by fluoroscopy</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="thal_manual" class="form-label">Thalassemia</label>
+                                    <select class="form-select modern-select{% if missing_fields and 'thal' in missing_fields %} field-missing{% endif %}" id="thal_manual" name="thal" required data-missing="{{ 'true' if missing_fields and 'thal' in missing_fields else 'false' }}">
+                                        <option value="">Select...</option>
+                                        <option value="1" {{ 'selected' if prefilled_data and prefilled_data.get('thal')|string == '1' else '' }}>Normal</option>
+                                        <option value="2" {{ 'selected' if prefilled_data and prefilled_data.get('thal')|string == '2' else '' }}>Fixed Defect</option>
+                                        <option value="3" {{ 'selected' if prefilled_data and prefilled_data.get('thal')|string == '3' else '' }}>Reversible Defect</option>
+                                    </select>
+                                    <div class="form-text">Thalassemia blood disorder test</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- DROPDOWN FORM - Fixed values -->
+                    <div id="dropdownForm" class="hidden">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="age_dropdown" class="form-label">Age (years)</label>
+                                    <select class="form-select modern-select{% if missing_fields and 'age' in missing_fields %} field-missing{% endif %}" id="age_dropdown" name="age" required data-missing="{{ 'true' if missing_fields and 'age' in missing_fields else 'false' }}">
+                                        <option value="">Select age</option>
+                                        <!-- Generated by JavaScript -->
+                                    </select>
+                                    <div class="form-text">Select your age</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="sex_dropdown" class="form-label">Gender</label>
+                                    <select class="form-select modern-select{% if missing_fields and 'sex' in missing_fields %} field-missing{% endif %}" id="sex_dropdown" name="sex" required data-missing="{{ 'true' if missing_fields and 'sex' in missing_fields else 'false' }}">
+                                        <option value="">Select gender</option>
+                                        <option value="0">Female</option>
+                                        <option value="1">Male</option>
+                                    </select>
+                                    <div class="form-text">Select your gender</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="cp_dropdown" class="form-label">Chest Pain Type</label>
+                                    <select class="form-select modern-select{% if missing_fields and 'cp' in missing_fields %} field-missing{% endif %}" id="cp_dropdown" name="cp" required data-missing="{{ 'true' if missing_fields and 'cp' in missing_fields else 'false' }}">
+                                        <option value="">Select type</option>
+                                        <option value="0">Typical Angina</option>
+                                        <option value="1">Atypical Angina</option>
+                                        <option value="2">Non-anginal Pain</option>
+                                        <option value="3">Asymptomatic</option>
+                                    </select>
+                                    <div class="form-text">Type of chest pain experienced</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="trestbps_dropdown" class="form-label">Resting Blood Pressure (mm Hg)</label>
+                                    <select class="form-select modern-select{% if missing_fields and 'trestbps' in missing_fields %} field-missing{% endif %}" id="trestbps_dropdown" name="trestbps" required data-missing="{{ 'true' if missing_fields and 'trestbps' in missing_fields else 'false' }}">
+                                        <option value="">Select blood pressure</option>
+                                        <!-- Generated by JavaScript -->
+                                    </select>
+                                    <div class="form-text">Select your blood pressure</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="chol_dropdown" class="form-label">Serum Cholesterol (mg/dl)</label>
+                                    <select class="form-select modern-select{% if missing_fields and 'chol' in missing_fields %} field-missing{% endif %}" id="chol_dropdown" name="chol" required data-missing="{{ 'true' if missing_fields and 'chol' in missing_fields else 'false' }}">
+                                        <option value="">Select cholesterol</option>
+                                        <!-- Generated by JavaScript -->
+                                    </select>
+                                    <div class="form-text">Select your cholesterol level</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="fbs_dropdown" class="form-label">Fasting Blood Sugar</label>
+                                    <select class="form-select modern-select{% if missing_fields and 'fbs' in missing_fields %} field-missing{% endif %}" id="fbs_dropdown" name="fbs" required data-missing="{{ 'true' if missing_fields and 'fbs' in missing_fields else 'false' }}">
+                                        <option value="">Select level</option>
+                                        <option value="0">≤ 120 mg/dl (Normal)</option>
+                                        <option value="1">> 120 mg/dl (High)</option>
+                                    </select>
+                                    <div class="form-text">Fasting blood sugar level</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="restecg_dropdown" class="form-label">Resting ECG</label>
+                                    <select class="form-select modern-select{% if missing_fields and 'restecg' in missing_fields %} field-missing{% endif %}" id="restecg_dropdown" name="restecg" required data-missing="{{ 'true' if missing_fields and 'restecg' in missing_fields else 'false' }}">
+                                        <option value="">Select result</option>
+                                        <option value="0">Normal</option>
+                                        <option value="1">ST-T Wave Abnormality</option>
+                                        <option value="2">Left Ventricular Hypertrophy</option>
+                                    </select>
+                                    <div class="form-text">Resting electrocardiographic results</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="thalach_dropdown" class="form-label">Maximum Heart Rate</label>
+                                    <select class="form-select modern-select{% if missing_fields and 'thalach' in missing_fields %} field-missing{% endif %}" id="thalach_dropdown" name="thalach" required data-missing="{{ 'true' if missing_fields and 'thalach' in missing_fields else 'false' }}">
+                                        <option value="">Select heart rate</option>
+                                        <!-- Generated by JavaScript -->
+                                    </select>
+                                    <div class="form-text">Maximum heart rate during exercise</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="exang_dropdown" class="form-label">Exercise Induced Angina</label>
+                                    <select class="form-select modern-select{% if missing_fields and 'exang' in missing_fields %} field-missing{% endif %}" id="exang_dropdown" name="exang" required data-missing="{{ 'true' if missing_fields and 'exang' in missing_fields else 'false' }}">
+                                        <option value="">Select option</option>
+                                        <option value="0">No</option>
+                                        <option value="1">Yes</option>
+                                    </select>
+                                    <div class="form-text">Angina induced by exercise</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="oldpeak_dropdown" class="form-label">ST Depression</label>
+                                    <select class="form-select modern-select{% if missing_fields and 'oldpeak' in missing_fields %} field-missing{% endif %}" id="oldpeak_dropdown" name="oldpeak" required data-missing="{{ 'true' if missing_fields and 'oldpeak' in missing_fields else 'false' }}">
+                                        <option value="">Select value</option>
+                                        <!-- Generated by JavaScript -->
+                                    </select>
+                                    <div class="form-text">ST depression induced by exercise</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="slope_dropdown" class="form-label">ST Segment Slope</label>
+                                    <select class="form-select modern-select{% if missing_fields and 'slope' in missing_fields %} field-missing{% endif %}" id="slope_dropdown" name="slope" required data-missing="{{ 'true' if missing_fields and 'slope' in missing_fields else 'false' }}">
+                                        <option value="">Select slope</option>
+                                        <option value="0">Upsloping</option>
+                                        <option value="1">Flat</option>
+                                        <option value="2">Downsloping</option>
+                                    </select>
+                                    <div class="form-text">Slope of peak exercise ST segment</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="ca_dropdown" class="form-label">Major Vessels</label>
+                                    <select class="form-select modern-select{% if missing_fields and 'ca' in missing_fields %} field-missing{% endif %}" id="ca_dropdown" name="ca" required data-missing="{{ 'true' if missing_fields and 'ca' in missing_fields else 'false' }}">
+                                        <option value="">Select number</option>
+                                        <option value="0">0 vessels</option>
+                                        <option value="1">1 vessel</option>
+                                        <option value="2">2 vessels</option>
+                                        <option value="3">3 vessels</option>
+                                    </select>
+                                    <div class="form-text">Number of major vessels colored by fluoroscopy</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="thal_dropdown" class="form-label">Thalassemia</label>
+                                    <select class="form-select modern-select{% if missing_fields and 'thal' in missing_fields %} field-missing{% endif %}" id="thal_dropdown" name="thal" required data-missing="{{ 'true' if missing_fields and 'thal' in missing_fields else 'false' }}">
+                                        <option value="">Select type</option>
+                                        <option value="1">Normal</option>
+                                        <option value="2">Fixed Defect</option>
+                                        <option value="3">Reversible Defect</option>
+                                    </select>
+                                    <div class="form-text">Thalassemia blood disorder test</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-12 text-center">
+                            <button type="submit" class="btn btn-assess me-3">
+                                <i class="bi bi-heart-pulse me-2"></i>Assess Risk
+                            </button>
+                            <button type="button" class="btn btn-clear" id="clearFormButton">
+                                <i class="bi bi-arrow-clockwise me-2"></i>Clear Form
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Toggle between manual and dropdown modes
+document.getElementById('manualMode').addEventListener('click', function() {
+    document.getElementById('manualForm').classList.remove('hidden');
+    document.getElementById('dropdownForm').classList.add('hidden');
+    
+    // Update button states
+    this.classList.add('active');
+    document.getElementById('dropdownMode').classList.remove('active');
+    
+    // Clear dropdown form and enable manual validation
+    document.querySelectorAll('#dropdownForm select').forEach(el => {
+        el.value = '';
+        el.removeAttribute('required');
+    });
+    document.querySelectorAll('#manualForm input[type="number"], #manualForm select').forEach(el => {
+        el.setAttribute('required', 'required');
+    });
+    
+    // Enable manual form fields and disable dropdown fields
+    document.querySelectorAll('#manualForm input, #manualForm select').forEach(el => el.disabled = false);
+    document.querySelectorAll('#dropdownForm select').forEach(el => el.disabled = true);
+});
+
+document.getElementById('dropdownMode').addEventListener('click', function() {
+    document.getElementById('dropdownForm').classList.remove('hidden');
+    document.getElementById('manualForm').classList.add('hidden');
+    
+    // Update button states
+    this.classList.add('active');
+    document.getElementById('manualMode').classList.remove('active');
+    
+    // Clear manual form and enable dropdown validation
+    document.querySelectorAll('#manualForm input, #manualForm select').forEach(el => {
+        el.value = '';
+        el.removeAttribute('required');
+    });
+    document.querySelectorAll('#dropdownForm select').forEach(el => {
+        el.setAttribute('required', 'required');
+    });
+    
+    // Enable dropdown form fields and disable manual fields
+    document.querySelectorAll('#dropdownForm select').forEach(el => el.disabled = false);
+    document.querySelectorAll('#manualForm input, #manualForm select').forEach(el => el.disabled = true);
+});
+
+// Function to update field status
+function updateFieldStatus(field) {
+    if (field.value && field.value !== '' && field.value !== 'Select...') {
+        field.classList.remove('field-missing');
+        field.classList.add('field-filled');
+    } else {
+        field.classList.remove('field-filled');
+        // Re-add error styling if this field was marked as missing
+        if (field.dataset.missing === 'true') {
+            field.classList.add('field-missing');
+        }
+    }
+}
+
+// Generate dynamic dropdown options
+function generateDropdownOptions() {
+    // Age: 20-100 (1 year increments)
+    const ageDropdown = document.getElementById('age_dropdown');
+    if (ageDropdown && ageDropdown.options.length <= 1) {
+        for (let i = 20; i <= 100; i++) {
+            const option = document.createElement('option');
+            option.value = i;
+            option.text = `${i} years`;
+            ageDropdown.appendChild(option);
+        }
+    }
+    
+    // Blood Pressure: 90-200 (5 mm Hg increments)
+    const bpDropdown = document.getElementById('trestbps_dropdown');
+    if (bpDropdown && bpDropdown.options.length <= 1) {
+        for (let i = 90; i <= 200; i += 5) {
+            const option = document.createElement('option');
+            option.value = i;
+            option.text = `${i} mm Hg`;
+            bpDropdown.appendChild(option);
+        }
+    }
+    
+    // Cholesterol: 100-600 (10 mg/dl increments)
+    const cholDropdown = document.getElementById('chol_dropdown');
+    if (cholDropdown && cholDropdown.options.length <= 1) {
+        for (let i = 100; i <= 600; i += 10) {
+            const option = document.createElement('option');
+            option.value = i;
+            option.text = `${i} mg/dl`;
+            cholDropdown.appendChild(option);
+        }
+    }
+    
+    // Heart Rate: 60-200 (5 bpm increments)
+    const hrDropdown = document.getElementById('thalach_dropdown');
+    if (hrDropdown && hrDropdown.options.length <= 1) {
+        for (let i = 60; i <= 200; i += 5) {
+            const option = document.createElement('option');
+            option.value = i;
+            option.text = `${i} bpm`;
+            hrDropdown.appendChild(option);
+        }
+    }
+    
+    // ST Depression: 0-6.2 (0.1 increments)
+    const stDropdown = document.getElementById('oldpeak_dropdown');
+    if (stDropdown && stDropdown.options.length <= 1) {
+        for (let i = 0; i <= 62; i++) {
+            const value = i / 10;
+            const option = document.createElement('option');
+            option.value = value.toFixed(1);
+            option.text = value.toFixed(1);
+            stDropdown.appendChild(option);
+        }
+    }
+}
+
+// Set prefilled values in dropdowns
+function setPrefilledDropdowns() {
+    {% if prefilled_data %}
+        const data = {{ prefilled_data|tojson|safe }};
+        
+        // Set values for dropdown fields if they exist
+        if (data.age) document.getElementById('age_dropdown').value = data.age;
+        if (data.trestbps) document.getElementById('trestbps_dropdown').value = data.trestbps;
+        if (data.chol) document.getElementById('chol_dropdown').value = data.chol;
+        if (data.thalach) document.getElementById('thalach_dropdown').value = data.thalach;
+        if (data.oldpeak) document.getElementById('oldpeak_dropdown').value = parseFloat(data.oldpeak).toFixed(1);
+    {% endif %}
+}
+
+// Initialize manual form as default
+document.addEventListener('DOMContentLoaded', function() {
+    // Generate dropdown options
+    generateDropdownOptions();
+    
+    // Set prefilled values in dropdowns
+    setPrefilledDropdowns();
+    
+    // Ensure manual form is visible and has validation
+    document.querySelectorAll('#manualForm input[type="number"], #manualForm select').forEach(el => {
+        el.setAttribute('required', 'required');
+    });
+    
+    // Disable dropdown form fields initially
+    document.querySelectorAll('#dropdownForm select').forEach(el => el.disabled = true);
+
+    // Add styling to fields based on their state
+    document.querySelectorAll('#manualForm input, #manualForm select, #dropdownForm select').forEach(element => {
+        if (element.dataset.missing === 'true') {
+            // Only add error styling if the field is empty
+            if (!element.value || element.value === '' || element.value === 'Select...') {
+                element.classList.add('field-missing');
+            } else {
+                element.classList.add('field-filled');
+            }
+        }
+        
+        // Add event listeners
+        element.addEventListener('input', function() {
+            updateFieldStatus(this);
+        });
+        element.addEventListener('change', function() {
+            updateFieldStatus(this);
+        });
+    });
+
+    // Highlight prefilled fields with success styling
+    document.querySelectorAll('#manualForm input, #manualForm select, #dropdownForm select').forEach(function(element) {
+        if (element.value && element.value !== '' && element.value !== 'Select...') {
+            element.classList.add('field-filled');
+        }
+    });
+});
+
+// Form validation
+(function() {
+    'use strict';
+    window.addEventListener('load', function() {
+        var forms = document.getElementsByClassName('needs-validation');
+        var validation = Array.prototype.filter.call(forms, function(form) {
+            form.addEventListener('submit', function(event) {
+                if (form.checkValidity() === false) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    }, false);
+})();
+
+// Function to clear form and reset state
+function clearForm() {
+    // Clear all form fields
+    document.querySelectorAll('input, select').forEach(function(element) {
+        if (element.tagName === 'INPUT') {
+            element.value = '';
+        } else if (element.tagName === 'SELECT') {
+            element.selectedIndex = 0;
+        }
+        
+        // Reset styling
+        element.classList.remove('field-filled', 'field-missing');
+        element.dataset.missing = 'false';  // Reset missing flag
+    });
+    
+    // Reset validation state
+    document.querySelector('form').classList.remove('was-validated');
+    
+    // Remove any flash messages
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach(alert => alert.remove());
+    
+    // Hide extraction status cards
+    const extractionCards = document.getElementById('extractionStatus');
+    if (extractionCards) extractionCards.classList.add('d-none');
+    
+    // Hide missing fields prompt
+    const missingPrompt = document.getElementById('missingFieldsPrompt');
+    if (missingPrompt) missingPrompt.classList.add('d-none');
+    
+    // Clear session on server
+    Promise.all([
+        fetch('/clear_extraction', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }),
+        fetch('/clear_assessment', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+    ])
+    .then(responses => {
+        responses.forEach((response, index) => {
+            if (!response.ok) {
+                console.error(`Failed to clear session data from endpoint ${index === 0 ? 'clear_extraction' : 'clear_assessment'}`);
+            }
+        });
+    })
+    .catch(error => console.error('Error clearing session:', error));
+}
+
+// Start new assessment
+function startNewAssessment() {
+    // Show confirmation dialog
+    if (!confirm('Are you sure you want to start a new assessment? This will clear all current data.')) {
+        return; // User canceled
+    }
+    
+    const newAssessmentBtn = document.querySelector('.new-assessment-btn');
+    if (!newAssessmentBtn) return;
+    
+    // Save original button state
+    const originalHTML = newAssessmentBtn.innerHTML;
+    const originalWidth = newAssessmentBtn.offsetWidth + 'px';
+    
+    // Show loading state
+    newAssessmentBtn.innerHTML = '<i class="bi bi-arrow-clockwise spin"></i> Starting...';
+    newAssessmentBtn.style.width = originalWidth;
+    newAssessmentBtn.disabled = true;
+    
+    // Clear the form and reset UI
+    clearForm();
+    
+    // Reset button after animation completes
+    setTimeout(() => {
+        newAssessmentBtn.innerHTML = originalHTML;
+        newAssessmentBtn.style.width = 'auto';
+        newAssessmentBtn.disabled = false;
+        
+        // Show success feedback
+        const originalColor = newAssessmentBtn.style.backgroundColor;
+        const originalBorder = newAssessmentBtn.style.borderColor;
+        newAssessmentBtn.innerHTML = '<i class="bi bi-check-circle-fill me-2"></i> Ready!';
+        newAssessmentBtn.style.backgroundColor = '#28a745';
+        newAssessmentBtn.style.borderColor = '#28a745';
+        
+        setTimeout(() => {
+            newAssessmentBtn.innerHTML = originalHTML;
+            newAssessmentBtn.style.backgroundColor = originalColor;
+            newAssessmentBtn.style.borderColor = originalBorder;
+        }, 1500);
+    }, 1000);
+}
+
+// Clear form button handler
+document.getElementById('clearFormButton').addEventListener('click', function() {
+    clearForm();
+    
+    // Show visual feedback
+    const btn = this;
+    const originalHTML = btn.innerHTML;
+    const originalColor = btn.style.backgroundColor;
+    const originalBorder = btn.style.borderColor;
+    
+    btn.innerHTML = '<i class="bi bi-check-circle-fill me-2"></i> Cleared!';
+    btn.style.backgroundColor = '#28a745';
+    btn.style.borderColor = '#28a745';
+    
+    setTimeout(() => {
+        btn.innerHTML = originalHTML;
+        btn.style.backgroundColor = originalColor;
+        btn.style.borderColor = originalBorder;
+    }, 1500);
+});
+</script>
+{% endblock %}

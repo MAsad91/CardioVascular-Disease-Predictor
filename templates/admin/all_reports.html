@@ -1,0 +1,523 @@
+{% extends "base_sidebar.html" %}
+
+{% block title %}All Reports - Heart Disease Prediction{% endblock %}
+
+{% block content %}
+<style>
+    :root {
+        --primary-color: #7ecbff;
+        --secondary-color: #7fffd4;
+        --bg-darker: #232946;
+        --bg-darkest: #1a1e3a;
+        --text-light: #f3f6fa;
+        --text-muted: #bdbddd;
+        --accent-color: #ff6b6b;
+        --success-color: #10b981;
+        --warning-color: #f59e0b;
+    }
+
+    .admin-header {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        border-radius: 1rem;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .admin-header h1 {
+        color: var(--bg-darker);
+        font-weight: 700;
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .admin-header p {
+        color: rgba(35, 41, 70, 0.8);
+        font-size: 1.2rem;
+        margin-bottom: 0;
+    }
+
+    .search-filters {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .reports-table {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 1rem;
+        overflow: hidden;
+    }
+
+    .table {
+        margin-bottom: 0;
+    }
+
+    .table th {
+        background: rgba(126, 203, 255, 0.1);
+        color: var(--primary-color);
+        font-weight: 600;
+        border: none;
+        padding: 1rem;
+    }
+
+    .table td {
+        color: var(--text-light);
+        border: none;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 1rem;
+        vertical-align: middle;
+    }
+
+    .table tbody tr:hover {
+        background: rgba(126, 203, 255, 0.05);
+    }
+
+    .risk-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 1rem;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .risk-low {
+        background: rgba(16, 185, 129, 0.2);
+        color: #10b981;
+        border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .risk-medium {
+        background: rgba(245, 158, 11, 0.2);
+        color: #f59e0b;
+        border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .risk-high {
+        background: rgba(239, 68, 68, 0.2);
+        color: #ef4444;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .user-info {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .user-name {
+        font-weight: 600;
+        color: var(--primary-color);
+    }
+
+    .user-email {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+    }
+
+    .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.5rem;
+        font-size: 0.8rem;
+    }
+
+    .metric-item {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .metric-label {
+        color: var(--text-muted);
+    }
+
+    .metric-value {
+        font-weight: 600;
+        color: var(--text-light);
+    }
+
+    .pagination {
+        justify-content: center;
+        margin-top: 2rem;
+    }
+
+    .page-link {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: var(--text-light);
+    }
+
+    .page-link:hover {
+        background: var(--primary-color);
+        color: var(--bg-darker);
+        border-color: var(--primary-color);
+    }
+
+    .page-item.active .page-link {
+        background: var(--primary-color);
+        border-color: var(--primary-color);
+        color: var(--bg-darker);
+    }
+
+    .stats-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        text-align: center;
+    }
+
+    .stat-number {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+    }
+</style>
+
+<div class="container mt-4">
+    <!-- Header -->
+    <div class="admin-header">
+        <h1>
+            <i class="bi bi-file-earmark-text-fill me-3"></i>
+            All Reports
+        </h1>
+        <p>View all health assessments and reports from all users</p>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="stats-cards">
+        <div class="stat-card">
+            <div class="stat-number">{{ total_predictions }}</div>
+            <div class="stat-label">Total Reports</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ predictions|selectattr('risk_level', 'equalto', 'High')|list|length }}</div>
+            <div class="stat-label">High Risk</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ predictions|selectattr('risk_level', 'equalto', 'Medium')|list|length }}</div>
+            <div class="stat-label">Medium Risk</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">{{ predictions|selectattr('risk_level', 'equalto', 'Low')|list|length }}</div>
+            <div class="stat-label">Low Risk</div>
+        </div>
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="search-filters">
+        <form method="GET" class="row g-3">
+            <div class="col-md-3">
+                <label for="search" class="form-label text-light">Search</label>
+                <input type="text" class="form-control" id="search" name="search" 
+                       value="{{ search }}" placeholder="Search by user name or email">
+            </div>
+            <div class="col-md-3">
+                <label for="user" class="form-label text-light">Filter by User</label>
+                <select class="form-select" id="user" name="user">
+                    <option value="">All Users</option>
+                    {% for user in all_users %}
+                    <option value="{{ user.id }}" {% if user_filter|int == user.id %}selected{% endif %}>
+                        {{ user.get_full_name() }} ({{ user.email }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="risk_level" class="form-label text-light">Filter by Risk Level</label>
+                <select class="form-select" id="risk_level" name="risk_level">
+                    <option value="">All Risk Levels</option>
+                    <option value="Low" {% if risk_filter == 'Low' %}selected{% endif %}>Low Risk</option>
+                    <option value="Medium" {% if risk_filter == 'Medium' %}selected{% endif %}>Medium Risk</option>
+                    <option value="High" {% if risk_filter == 'High' %}selected{% endif %}>High Risk</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label text-light">&nbsp;</label>
+                <div>
+                    <button type="submit" class="btn btn-primary me-2">
+                        <i class="bi bi-search"></i> Search
+                    </button>
+                    <a href="{{ url_for('admin_all_reports') }}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-clockwise"></i> Reset
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Reports Table -->
+    <div class="reports-table">
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Date</th>
+                        <th>Risk Level</th>
+                        <th>Probability</th>
+                        <th>Source</th>
+                        <th>Key Metrics</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for prediction in predictions %}
+                    <tr>
+                        <td>
+                            <div class="user-info">
+                                <span class="user-name">{{ prediction.user_name }}</span>
+                                <span class="user-email">{{ prediction.user_email }}</span>
+                            </div>
+                        </td>
+                        <td>{{ prediction.date }}</td>
+                        <td>
+                            <span class="risk-badge risk-{{ prediction.risk_level|lower }}">
+                                {{ prediction.risk_level }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="progress" style="height: 20px;">
+                                <div class="progress-bar" role="progressbar" 
+                                     style="width: {{ prediction.probability }}%; 
+                                            background: {% if prediction.probability > 70 %}#ef4444{% elif prediction.probability > 40 %}#f59e0b{% else %}#10b981{% endif %};"
+                                     aria-valuenow="{{ prediction.probability }}" 
+                                     aria-valuemin="0" aria-valuemax="100">
+                                    {{ prediction.probability }}%
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-secondary">{{ prediction.source|title }}</span>
+                        </td>
+                        <td>
+                            <div class="metrics-grid">
+                                <div class="metric-item">
+                                    <span class="metric-label">Age:</span>
+                                    <span class="metric-value">{{ prediction.metrics.age|default('N/A') }}</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span class="metric-label">BP:</span>
+                                    <span class="metric-value">{{ prediction.metrics.trestbps|default('N/A') }}</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span class="metric-label">Chol:</span>
+                                    <span class="metric-value">{{ prediction.metrics.chol|default('N/A') }}</span>
+                                </div>
+                                <div class="metric-item">
+                                    <span class="metric-label">HR:</span>
+                                    <span class="metric-value">{{ prediction.metrics.thalach|default('N/A') }}</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <a href="{{ url_for('admin_view_report', session_id=prediction.id) }}" 
+                                   class="btn btn-sm btn-outline-primary" title="View Details">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{{ url_for('admin_download_report', session_id=prediction.id) }}" 
+                                   class="btn btn-sm btn-outline-success" title="Download Report">
+                                    <i class="bi bi-download"></i>
+                                </a>
+                                <button onclick="deleteReport('{{ prediction.id }}')" 
+                                        class="btn btn-sm btn-outline-danger" title="Delete Report">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Pagination -->
+    {% if total_predictions > per_page %}
+    <nav aria-label="Reports pagination">
+        <ul class="pagination">
+            {% set total_pages = (total_predictions / per_page)|round(0, 'ceil')|int %}
+            
+            {% if page > 1 %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('admin_all_reports', page=page-1, search=search, user=user_filter, risk_level=risk_filter) }}">
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+                </li>
+            {% endif %}
+            
+            {% for p in range(1, total_pages + 1) %}
+                {% if p == page %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ p }}</span>
+                    </li>
+                {% elif p <= page + 2 and p >= page - 2 %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('admin_all_reports', page=p, search=search, user=user_filter, risk_level=risk_filter) }}">
+                            {{ p }}
+                        </a>
+                    </li>
+                {% elif p == 1 or p == total_pages %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ url_for('admin_all_reports', page=p, search=search, user=user_filter, risk_level=risk_filter) }}">
+                            {{ p }}
+                        </a>
+                    </li>
+                {% elif p == page - 3 or p == page + 3 %}
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                {% endif %}
+            {% endfor %}
+            
+            {% if page < total_pages %}
+                <li class="page-item">
+                    <a class="page-link" href="{{ url_for('admin_all_reports', page=page+1, search=search, user=user_filter, risk_level=risk_filter) }}">
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+
+<style>
+.notification-alert {
+    padding: 1.25rem;
+    border-radius: 0.875rem;
+    margin-bottom: 2rem;
+    border: 1px solid;
+    position: relative;
+    overflow: hidden;
+    font-size: 0.95rem;
+    backdrop-filter: blur(18px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.notification-alert.notification-success {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: rgba(16, 185, 129, 0.3);
+    color: #10b981;
+}
+
+.notification-alert.notification-danger {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: #ef4444;
+}
+
+.notification-alert.notification-info {
+    background: rgba(126, 203, 255, 0.1);
+    border-color: rgba(126, 203, 255, 0.3);
+    color: #7ecbff;
+}
+
+.notification-alert.notification-warning {
+    background: rgba(245, 158, 11, 0.1);
+    border-color: rgba(245, 158, 11, 0.3);
+    color: #f59e0b;
+}
+
+.notification-alert .btn-close {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background: none;
+    border: none;
+    color: inherit;
+    opacity: 0.7;
+    cursor: pointer;
+    padding: 0.25rem;
+    font-size: 1.2rem;
+}
+
+.notification-alert .btn-close:hover {
+    opacity: 1;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-submit form when filters change
+    document.getElementById('user').addEventListener('change', function() {
+        this.form.submit();
+    });
+    
+    document.getElementById('risk_level').addEventListener('change', function() {
+        this.form.submit();
+    });
+});
+
+function deleteReport(sessionId) {
+    if (confirm('Are you sure you want to delete this report? This action cannot be undone.')) {
+        fetch(`/admin/delete_report/${sessionId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Report deleted successfully!', 'success');
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1000);
+            } else {
+                showNotification('Error deleting report: ' + data.message, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting report:', error);
+            showNotification('Error deleting report. Please try again.', 'error');
+        });
+    }
+}
+
+function showNotification(message, type) {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `notification-alert notification-${type} position-fixed`;
+    notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px; max-width: 400px;';
+    
+    const icon = type === 'success' ? 'check-circle-fill' : 
+                type === 'error' ? 'exclamation-triangle-fill' : 
+                type === 'warning' ? 'exclamation-triangle-fill' : 'info-circle-fill';
+    
+    notification.innerHTML = `
+        <i class="bi bi-${icon} me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" onclick="this.parentElement.remove()">×</button>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.remove();
+        }
+    }, 5000);
+}
+</script>
+{% endblock %} 

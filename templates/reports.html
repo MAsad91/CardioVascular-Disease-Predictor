@@ -1,0 +1,717 @@
+{% extends "base_sidebar.html" %}
+
+{% block title %}Heart Disease Prediction Reports{% endblock %}
+
+{% block content %}
+<style>
+    .container {
+        max-width: 1400px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+
+    .card {
+        background: var(--glass-bg);
+        backdrop-filter: blur(var(--glass-blur));
+        border: 1.5px solid var(--divider-color);
+        border-radius: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.18);
+    }
+
+    .card-header {
+        background: rgba(255, 255, 255, 0.05);
+        border-bottom: 1.5px solid var(--divider-color);
+        padding: 1.5rem;
+        border-radius: 1.5rem 1.5rem 0 0;
+    }
+
+    .card-header h3 {
+        color: var(--primary-color);
+        margin: 0;
+        font-weight: 600;
+    }
+
+    .card-body {
+        padding: 1.5rem;
+        color: #f3f6fa;
+    }
+
+    .search-filters {
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .table {
+        color: #f3f6fa;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 1rem;
+        overflow: hidden;
+    }
+
+    .table th {
+        background: rgba(126, 203, 255, 0.1);
+        color: var(--primary-color);
+        font-weight: 600;
+        border-color: var(--divider-color);
+        padding: 1rem 0.75rem;
+    }
+
+    .table td {
+        border-color: var(--divider-color);
+        padding: 1rem 0.75rem;
+        vertical-align: middle;
+        color: #f3f6fa;
+    }
+
+    .table td strong {
+        color: #ffffff;
+    }
+
+    .table td .text-muted {
+        color: #bdbddd !important;
+    }
+
+    .table td small {
+        color: #d1d5db;
+    }
+
+    .table-hover tbody tr:hover {
+        background: rgba(126, 203, 255, 0.15) !important;
+        transform: scale(1.02);
+        transition: all 0.2s ease;
+        box-shadow: 0 4px 15px rgba(126, 203, 255, 0.1);
+    }
+
+    .table-hover tbody tr:hover td {
+        color: #ffffff !important;
+    }
+
+    .table-hover tbody tr:hover .badge {
+        transform: scale(1.05);
+        transition: transform 0.2s ease;
+    }
+
+    .table-hover tbody tr:hover .btn {
+        transform: translateY(-1px);
+        transition: transform 0.2s ease;
+    }
+
+    .badge {
+        padding: 0.5rem 1rem;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+
+    .badge.bg-danger {
+        background: rgba(255, 107, 107, 0.2) !important;
+        color: #ff6b6b;
+    }
+
+    .badge.bg-warning {
+        background: rgba(255, 215, 0, 0.2) !important;
+        color: #ffd700;
+    }
+
+    .badge.bg-success {
+        background: rgba(127, 255, 212, 0.2) !important;
+        color: #7fffd4;
+    }
+
+    .badge.bg-secondary {
+        background: rgba(189, 189, 221, 0.2) !important;
+        color: #bdbddd;
+    }
+
+    .btn-group .btn {
+        padding: 0.4rem 0.8rem;
+        margin: 0 0.1rem;
+        border-radius: 0.5rem;
+        font-size: 0.85rem;
+    }
+
+    .btn-outline-primary {
+        color: var(--primary-color);
+        border-color: var(--primary-color);
+        background: transparent;
+    }
+
+    .btn-outline-primary:hover {
+        background: var(--primary-color);
+        color: var(--bg-dark);
+    }
+
+    .btn-outline-success {
+        color: #7fffd4;
+        border-color: #7fffd4;
+        background: transparent;
+    }
+
+    .btn-outline-success:hover {
+        background: #7fffd4;
+        color: var(--bg-dark);
+    }
+
+    .btn-outline-secondary {
+        color: #bdbddd;
+        border-color: #bdbddd;
+        background: transparent;
+    }
+
+    .btn-outline-secondary:hover {
+        background: #bdbddd;
+        color: var(--bg-dark);
+    }
+
+    .btn-outline-danger {
+        color: #ff6b6b;
+        border-color: #ff6b6b;
+        background: transparent;
+    }
+
+    .btn-outline-danger:hover {
+        background: #ff6b6b;
+        color: white;
+    }
+
+    .form-control, .form-select {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--divider-color);
+        color: #f3f6fa;
+        border-radius: 0.5rem;
+    }
+
+    .form-control:focus, .form-select:focus {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: var(--primary-color);
+        color: #ffffff !important;
+        box-shadow: 0 0 0 0.2rem rgba(126, 203, 255, 0.25);
+    }
+
+    .form-select option {
+        background: var(--bg-darker);
+        color: #f3f6fa;
+        border: none;
+    }
+
+    .form-select option:hover,
+    .form-select option:focus,
+    .form-select option:checked {
+        background: var(--primary-color);
+        color: var(--bg-dark);
+    }
+
+    /* Custom dropdown arrow for dark theme */
+    .form-select {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23f3f6fa' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m1 6 7 7 7-7'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 0.75rem center;
+        background-size: 16px 12px;
+    }
+
+    /* Force dark theme for select dropdowns - Webkit browsers */
+    .form-select {
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        background-color: var(--bg-darker) !important;
+        color: #f3f6fa !important;
+    }
+
+    /* Force dark theme for option elements - works in some browsers */
+    .form-select option {
+        background-color: var(--bg-darker) !important;
+        color: #f3f6fa !important;
+    }
+
+    .form-select option:checked {
+        background-color: var(--primary-color) !important;
+        color: var(--bg-dark) !important;
+    }
+
+    /* Additional dropdown styling for Bootstrap components */
+    .dropdown-menu {
+        background-color: var(--bg-darker) !important;
+        border: 1px solid var(--divider-color) !important;
+        border-radius: 0.5rem !important;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important;
+    }
+
+    .dropdown-item {
+        color: #f3f6fa !important;
+        background-color: transparent !important;
+    }
+
+    .dropdown-item:hover,
+    .dropdown-item:focus {
+        background-color: var(--primary-color) !important;
+        color: var(--bg-dark) !important;
+    }
+
+    .dropdown-item.active {
+        background-color: var(--primary-color) !important;
+        color: var(--bg-dark) !important;
+    }
+
+    /* Modern select alternative styling */
+    .custom-select-wrapper {
+        position: relative;
+        display: inline-block;
+        width: 100%;
+    }
+
+    .custom-select-wrapper select {
+        background: var(--bg-darker) !important;
+        color: #f3f6fa !important;
+    }
+
+    .form-control::placeholder {
+        color: #bdbddd;
+        opacity: 0.7;
+    }
+
+    .form-label {
+        color: var(--primary-color);
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .alert {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--divider-color);
+        color: #f3f6fa;
+        border-radius: 1rem;
+    }
+
+    .alert-info {
+        border-left: 4px solid var(--primary-color);
+    }
+
+    .stats-row {
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--divider-color);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        text-align: center;
+        height: 100%;
+    }
+
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+        color: #bdbddd;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+        color: #bdbddd;
+    }
+
+    .empty-state i {
+        font-size: 4rem;
+        color: var(--primary-color);
+        margin-bottom: 1rem;
+    }
+
+    .loading-spinner {
+        text-align: center;
+        padding: 3rem;
+    }
+
+    .pagination {
+        justify-content: center;
+        margin-top: 2rem;
+    }
+
+    .pagination .page-link {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: var(--divider-color);
+        color: #f3f6fa;
+    }
+
+    .pagination .page-link:hover {
+        background: rgba(126, 203, 255, 0.1);
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+    }
+
+    .pagination .page-item.active .page-link {
+        background: var(--primary-color);
+        border-color: var(--primary-color);
+        color: var(--bg-dark);
+    }
+
+    @media (max-width: 768px) {
+        .btn-group {
+            flex-direction: column;
+        }
+        
+        .btn-group .btn {
+            margin: 0.1rem 0;
+            width: 100%;
+        }
+
+        .table-responsive {
+            font-size: 0.85rem;
+        }
+    }
+</style>
+
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h3><i class="bi bi-file-earmark-medical me-2"></i>Prediction Reports</h3>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-primary btn-sm" onclick="refreshReports()">
+                            <i class="bi bi-arrow-clockwise"></i> Refresh
+                        </button>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="exportReports()">
+                            <i class="bi bi-download"></i> Export All
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Statistics Row -->
+                    <div class="row stats-row" id="statsRow">
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <div class="stat-number" id="totalReports">-</div>
+                                <div class="stat-label">Total Reports</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <div class="stat-number" id="highRiskCount">-</div>
+                                <div class="stat-label">High Risk</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <div class="stat-number" id="mediumRiskCount">-</div>
+                                <div class="stat-label">Medium Risk</div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stat-card">
+                                <div class="stat-number" id="lowRiskCount">-</div>
+                                <div class="stat-label">Low Risk</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Search and Filters -->
+                    <div class="search-filters">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <label for="searchInput" class="form-label">Search Reports</label>
+                                <input type="text" class="form-control" id="searchInput" placeholder="Search by session ID, date..." onkeyup="filterReports()">
+                            </div>
+                            <div class="col-md-3">
+                                <label for="riskFilter" class="form-label">Risk Level</label>
+                                <select class="form-select" id="riskFilter" onchange="filterReports()">
+                                    <option value="">All Risk Levels</option>
+                                    <option value="High">High Risk</option>
+                                    <option value="Medium">Medium Risk</option>
+                                    <option value="Low">Low Risk</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="sourceFilter" class="form-label">Source</label>
+                                <select class="form-select" id="sourceFilter" onchange="filterReports()">
+                                    <option value="">All Sources</option>
+                                    <option value="manual_entry">Manual Entry</option>
+                                    <option value="pdf_upload">PDF Upload</option>
+                                    <option value="risk_assessment">Risk Assessment</option>
+                                    <option value="quick_assessment">Quick Assessment</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label for="limitSelect" class="form-label">Show</label>
+                                <select class="form-select" id="limitSelect" onchange="loadReports()">
+                                    <option value="10">10 reports</option>
+                                    <option value="25" selected>25 reports</option>
+                                    <option value="50">50 reports</option>
+                                    <option value="100">100 reports</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Reports Table -->
+                    <div id="reportsContainer">
+                        <div class="loading-spinner">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading reports...</span>
+                            </div>
+                            <p class="mt-2">Loading your prediction reports...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let allReports = [];
+let filteredReports = [];
+
+// Load reports when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    loadReports();
+});
+
+function loadReports() {
+    const limit = document.getElementById('limitSelect').value;
+    
+    // Show loading state
+    document.getElementById('reportsContainer').innerHTML = 
+        '<div class="loading-spinner">' +
+            '<div class="spinner-border text-primary" role="status">' +
+                '<span class="visually-hidden">Loading reports...</span>' +
+            '</div>' +
+            '<p class="mt-2">Loading your prediction reports...</p>' +
+        '</div>';
+
+    console.log('Fetching reports with limit:', limit);
+    
+    fetch('/api/my_predictions?limit=' + limit)
+        .then(response => {
+            console.log('API Response status:', response.status);
+            return response.json();
+        })
+        .then(data => {
+            console.log('API Response data:', data);
+            allReports = data.predictions || [];
+            filteredReports = [...allReports];
+            console.log('All reports:', allReports);
+            console.log('Filtered reports:', filteredReports);
+            updateStatistics();
+            displayReports();
+        })
+        .catch(error => {
+            console.error('Error loading reports:', error);
+            document.getElementById('reportsContainer').innerHTML = 
+                '<div class="alert alert-warning">' +
+                    '<i class="bi bi-exclamation-triangle me-2"></i>' +
+                    'Unable to load reports. Please try again later.' +
+                    '<button class="btn btn-outline-primary btn-sm ms-2" onclick="loadReports()">' +
+                        '<i class="bi bi-arrow-clockwise"></i> Retry' +
+                    '</button>' +
+                '</div>';
+        });
+}
+
+function updateStatistics() {
+    const total = allReports.length;
+    const highRisk = allReports.filter(r => r.risk_level === 'High').length;
+    const mediumRisk = allReports.filter(r => r.risk_level === 'Medium').length;
+    const lowRisk = allReports.filter(r => r.risk_level === 'Low').length;
+
+    document.getElementById('totalReports').textContent = total;
+    document.getElementById('highRiskCount').textContent = highRisk;
+    document.getElementById('mediumRiskCount').textContent = mediumRisk;
+    document.getElementById('lowRiskCount').textContent = lowRisk;
+}
+
+function displayReports() {
+    const container = document.getElementById('reportsContainer');
+    
+    console.log('Displaying reports, count:', filteredReports.length);
+    
+    if (filteredReports.length === 0) {
+        container.innerHTML = 
+            '<div class="empty-state">' +
+                '<i class="bi bi-file-earmark-medical"></i>' +
+                '<h4>No Reports Found</h4>' +
+                '<p>No prediction reports match your search criteria.</p>' +
+                '<a href="/" class="btn btn-primary mt-2">' +
+                    '<i class="bi bi-plus-circle"></i> Make a Prediction' +
+                '</a>' +
+            '</div>';
+        return;
+    }
+
+    let tableHtml = 
+        '<div class="table-responsive">' +
+            '<table class="table table-hover">' +
+                '<thead>' +
+                    '<tr>' +
+                        '<th>Date & Time</th>' +
+                        '<th>Risk Level</th>' +
+                        '<th>Probability</th>' +
+                        '<th>Source</th>' +
+                        '<th>Key Metrics</th>' +
+                        '<th>Actions</th>' +
+                    '</tr>' +
+                '</thead>' +
+                '<tbody>';
+
+    try {
+        filteredReports.forEach((report, index) => {
+            console.log(`Processing report ${index}:`, report);
+            
+            const date = new Date(report.timestamp).toLocaleDateString();
+            const time = new Date(report.timestamp).toLocaleTimeString();
+            const riskBadgeClass = getRiskBadgeClass(report.risk_level);
+            const probability = (report.probability * 100).toFixed(1);
+            const inputData = report.input_data; // Already parsed from JSON
+            
+            console.log(`Report ${index} processed data:`, {date, time, riskBadgeClass, probability, inputData});
+            
+            tableHtml += `
+                <tr>
+                    <td>
+                        <strong>${date}</strong><br>
+                        <small class="text-muted">${time}</small>
+                                </td>
+                                <td>
+                        <span class="badge ${riskBadgeClass}">${report.risk_level}</span>
+                                </td>
+                                <td>
+                        <strong>${probability}%</strong>
+                                </td>
+                                <td>
+                        <span class="badge bg-secondary">${report.source.replace('_', ' ')}</span>
+                                </td>
+                                <td>
+                        <small>
+                            Age: ${inputData.age} | 
+                            Chol: ${inputData.chol} | 
+                            BP: ${inputData.trestbps}
+                        </small>
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                            <a href="/explain_prediction/${report.session_id}" class="btn btn-outline-primary btn-sm" title="View detailed explanation">
+                                            <i class="bi bi-graph-up"></i> Explain
+                                        </a>
+                            <a href="/download_report/${report.session_id}" class="btn btn-outline-success btn-sm" title="Download PDF report">
+                                            <i class="bi bi-file-earmark-pdf"></i> PDF
+                                        </a>
+                            <button class="btn btn-outline-danger btn-sm" onclick="deleteReport('${report.id}')" title="Delete report">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                                    </div>
+                                </td>
+                            </tr>
+            `;
+        });
+    } catch (error) {
+        console.error('Error processing reports:', error);
+        container.innerHTML = 
+            '<div class="alert alert-danger">' +
+                '<i class="bi bi-exclamation-triangle me-2"></i>' +
+                'Error displaying reports: ' + error.message +
+            '</div>';
+        return;
+    }
+
+    tableHtml += 
+                '</tbody>' +
+            '</table>' +
+        '</div>';
+
+    console.log('Setting table HTML');
+    container.innerHTML = tableHtml;
+    console.log('Reports display completed');
+}
+
+function filterReports() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const riskFilter = document.getElementById('riskFilter').value;
+    const sourceFilter = document.getElementById('sourceFilter').value;
+
+    filteredReports = allReports.filter(report => {
+        const matchesSearch = !searchTerm || 
+            report.session_id.toLowerCase().includes(searchTerm) ||
+            new Date(report.timestamp).toLocaleDateString().includes(searchTerm);
+        
+        const matchesRisk = !riskFilter || report.risk_level === riskFilter;
+        const matchesSource = !sourceFilter || report.source === sourceFilter;
+
+        return matchesSearch && matchesRisk && matchesSource;
+    });
+
+    displayReports();
+    }
+
+function getRiskBadgeClass(riskLevel) {
+    switch(riskLevel.toLowerCase()) {
+        case 'high': return 'bg-danger';
+        case 'medium': return 'bg-warning';
+        case 'low': return 'bg-success';
+        default: return 'bg-secondary';
+    }
+}
+
+function refreshReports() {
+    loadReports();
+    }
+
+function exportReports() {
+    // Create CSV data
+    let csvContent = "Date,Time,Risk Level,Probability,Source,Age,Sex,Chest Pain,Blood Pressure,Cholesterol\n";
+    
+    filteredReports.forEach(report => {
+        const date = new Date(report.timestamp).toLocaleDateString();
+        const time = new Date(report.timestamp).toLocaleTimeString();
+        const inputData = report.input_data; // Already parsed from JSON
+        const probability = (report.probability * 100).toFixed(1);
+        
+        csvContent += `"${date}","${time}","${report.risk_level}","${probability}%","${report.source}","${inputData.age}","${inputData.sex}","${inputData.cp}","${inputData.trestbps}","${inputData.chol}"\n`;
+    });
+
+    // Download CSV
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `heart_disease_reports_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+function deleteReport(reportId) {
+    if (confirm('Are you sure you want to delete this report? This action cannot be undone.')) {
+        fetch(`/api/my_predictions/${reportId}`, {
+            method: 'DELETE'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                loadReports(); // Reload the reports
+            } else {
+                alert('Error deleting report: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting report:', error);
+            alert('Error deleting report. Please try again.');
+        });
+    }
+}
+</script>
+
+{% endblock %} 

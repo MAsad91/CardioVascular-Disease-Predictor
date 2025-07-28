@@ -1,0 +1,700 @@
+{% extends "base_sidebar.html" %}
+
+{% block title %}Heart Care - Your Personal Heart Health Assistant{% endblock %}
+
+{% block content %}
+<!-- Welcome Message -->
+{% if welcome_message %}
+<div class="notification-alert notification-success" role="alert" style="margin-bottom: 1rem;">
+    <i class="bi bi-check-circle-fill me-2"></i>
+    {{ welcome_message }}
+    <button type="button" class="btn-close" onclick="this.parentElement.remove()">×</button>
+</div>
+{% endif %}
+
+<!-- Admin Access Error Message -->
+{% if admin_access_error %}
+<div class="notification-alert notification-danger" role="alert" style="margin-bottom: 1rem;">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+    {{ admin_access_error }}
+    <button type="button" class="btn-close" onclick="this.parentElement.remove()">×</button>
+</div>
+{% endif %}
+<style>
+    :root {
+        --primary-color: #6366f1;
+        --secondary-color: #8b5cf6;
+        --success-color: #10b981;
+        --warning-color: #f59e0b;
+        --danger-color: #ef4444;
+        --dark-color: #1f2937;
+        --light-color: #f9fafb;
+        --border-radius: 1rem;
+        --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+
+    body {
+        background: #232946;
+        min-height: 100vh;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        color: #f3f6fa;
+    }
+
+    .home-hero {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: var(--border-radius);
+        padding: 2.5rem;
+        margin-bottom: 2.5rem;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .home-hero-title {
+        font-size: 2.7rem;
+        font-weight: 700;
+        color: #f3f6fa;
+        margin-bottom: 0.5rem;
+        background: linear-gradient(135deg, #7ecbff, #7fffd4);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .home-hero-lead {
+        font-size: 1.3rem;
+        color: #bdbddd;
+        margin-bottom: 1.5rem;
+        line-height: 1.6;
+    }
+
+    .home-hero-img {
+        width: 340px;
+        max-width: 100%;
+        margin: 0 auto;
+        display: block;
+        filter: drop-shadow(0 8px 32px rgba(126, 203, 255, 0.4));
+        animation: float 6s ease-in-out infinite;
+    }
+
+    @keyframes float {
+        0% {
+            transform: translateY(0px);
+        }
+
+        50% {
+            transform: translateY(-20px);
+        }
+
+        100% {
+            transform: translateY(0px);
+        }
+    }
+
+    .btn-cta {
+        background: linear-gradient(135deg, #7ecbff, #7fffd4);
+        color: #232946;
+        border: none;
+        padding: 0.875rem 1.5rem;
+        border-radius: 50px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .btn-cta:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(126, 203, 255, 0.3);
+        color: #232946;
+    }
+
+    .btn-cta-outline {
+        background: transparent;
+        color: #7ecbff;
+        border: 2px solid transparent;
+        background-image: linear-gradient(#232946, #232946), linear-gradient(135deg, #7ecbff, #7fffd4);
+        background-origin: border-box;
+        background-clip: padding-box, border-box;
+        padding: 0.875rem 1.5rem;
+        border-radius: 50px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .btn-cta-outline:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(126, 203, 255, 0.3);
+    }
+
+    .home-feature-card {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: var(--border-radius);
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+
+    .home-feature-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        border-color: rgba(126, 203, 255, 0.3);
+    }
+
+    .home-feature-icon {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem auto;
+        font-size: 2.2rem;
+        background: linear-gradient(135deg, #7ecbff, #7fffd4);
+        color: white;
+        box-shadow: 0 4px 20px rgba(126, 203, 255, 0.3);
+    }
+
+    .home-feature-card h3 {
+        color: #f3f6fa;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .home-feature-card h4 {
+        color: #f3f6fa;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .home-feature-card p {
+        color: #bdbddd;
+        line-height: 1.6;
+    }
+
+    .home-feature-card ul {
+        color: #bdbddd;
+        margin-bottom: 1.5rem;
+    }
+
+    .home-feature-card ul li {
+        margin-bottom: 0.5rem;
+    }
+
+    .text-muted {
+        color: #bdbddd !important;
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, #7ecbff, #7fffd4);
+        border: none;
+        border-radius: 50px;
+        padding: 0.875rem 1.5rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        color: #232946;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(126, 203, 255, 0.3);
+        color: #232946;
+    }
+
+    .btn-success {
+        background: linear-gradient(135deg, var(--success-color), #059669);
+        border: none;
+        border-radius: 50px;
+        padding: 0.875rem 1.5rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-success:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(16, 185, 129, 0.3);
+    }
+
+    .btn-outline-primary {
+        border: 2px solid var(--primary-color);
+        color: var(--primary-color);
+        background: transparent;
+        border-radius: 50px;
+        padding: 0.5rem 1rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-outline-primary:hover {
+        background: var(--primary-color);
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    .section-title {
+        text-align: center;
+        margin-bottom: 3rem;
+        padding: 2rem;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: var(--border-radius);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+
+    .section-title h2 {
+        color: #f3f6fa;
+        font-weight: 700;
+        margin: 0;
+        font-size: 2rem;
+    }
+
+    .home-stats {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: var(--border-radius);
+        padding: 2.5rem;
+        margin-bottom: 2.5rem;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        text-align: center;
+    }
+
+    .home-stat-item {
+        text-align: center;
+        padding: 1rem;
+    }
+
+    .home-stat-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #7ecbff, #7fffd4);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 0.5rem;
+    }
+
+    .home-stat-label {
+        color: #bdbddd;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.9rem;
+        letter-spacing: 0.5px;
+    }
+
+    .home-cta-section {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: var(--border-radius);
+        padding: 3rem 2rem;
+        text-align: center;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        min-height: 200px;
+    }
+
+    .home-cta-section h2 {
+        color: #f3f6fa;
+        font-size: 2.2rem;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .home-cta-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        margin: 1.5rem 0;
+    }
+
+    .home-cta-subtitle {
+        color: #a1a8b0;
+        font-size: 1.1rem;
+        margin: 0;
+        opacity: 0.9;
+    }
+
+    @media (max-width: 768px) {
+        .home-hero {
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .home-hero-title {
+            font-size: 2.2rem;
+        }
+
+        .home-hero-lead {
+            font-size: 1.1rem;
+        }
+
+        .home-cta-section {
+            padding: 2rem 1.5rem;
+        }
+
+        .home-cta-section h2 {
+            font-size: 1.8rem;
+        }
+
+        .home-cta-buttons {
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .home-cta-buttons .btn-cta {
+            width: 100%;
+            max-width: 280px;
+        }
+    }
+</style>
+
+{% if current_user.is_admin() %}
+<!-- Admin Dashboard -->
+<div class="home-hero mb-5">
+    <div class="flex-grow-1 pe-lg-5 mb-4 mb-lg-0">
+        <div class="home-hero-title mb-2">Welcome to Heart Care Admin</div>
+        <div class="home-hero-lead mb-3">System administration and user management dashboard for Heart Care platform.</div>
+        <div class="d-flex gap-3">
+            <a href="{{ url_for('admin_users') }}" class="btn-cta">
+                <i class="bi bi-people-fill me-2"></i>Manage Users
+            </a>
+            <a href="{{ url_for('admin_all_reports') }}" class="btn-cta-outline">
+                <i class="bi bi-file-earmark-text-fill me-2"></i>View All Reports
+            </a>
+        </div>
+    </div>
+    <div>
+        <img src="{{ url_for('static', filename='images/Heart Care.png') }}" alt="Heart Care" class="home-hero-img">
+    </div>
+</div>
+{% else %}
+<!-- Patient Dashboard -->
+<div class="home-hero mb-5">
+    <div class="flex-grow-1 pe-lg-5 mb-4 mb-lg-0">
+        <div class="home-hero-title mb-2">Welcome to Heart Care</div>
+        <div class="home-hero-lead mb-3">Your AI-powered heart health assistant for early detection and prevention of
+            heart disease.</div>
+        <a href="{{ url_for('risk_assessment') }}" class="btn-cta">
+            <i class="bi bi-heart-pulse me-2"></i>Get Your Risk Assessment
+        </a>
+    </div>
+    <div>
+        <img src="{{ url_for('static', filename='images/Heart Care.png') }}" alt="Heart Care" class="home-hero-img">
+    </div>
+</div>
+{% endif %}
+
+{% if not current_user.is_admin() %}
+<div class="container mb-5">
+    <div class="section-title">
+        <h2>Two Ways to Assess Your Heart Disease Risk</h2>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <div class="col-12 col-lg-6">
+            <div class="home-feature-card">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="home-feature-icon me-3"
+                        style="margin: 0; width: 60px; height: 60px; font-size: 1.5rem;">
+                        <i class="bi bi-upload"></i>
+                    </div>
+                    <div>
+                        <h3 class="mb-1">Method 1: Upload Medical Report</h3>
+                        <p class="text-muted mb-0">Automated data extraction</p>
+                    </div>
+                </div>
+                <p class="mb-3">Upload your medical reports, ECG/EKG images, or lab results. Our AI will automatically
+                    extract relevant health data. If some fields are missing, you'll be prompted to complete them in a
+                    pre-filled form.</p>
+                <ul class="mb-4">
+                    <li>✅ Automatic data extraction from PDF reports</li>
+                    <li>✅ ECG/EKG image analysis</li>
+                    <li>✅ Pre-filled forms for missing data</li>
+                    <li>✅ Instant risk assessment when all data is available</li>
+                </ul>
+                <a href="/upload" class="btn btn-primary w-100">
+                    <i class="bi bi-upload me-2"></i>Upload Report
+                </a>
+            </div>
+        </div>
+        <div class="col-12 col-lg-6">
+            <div class="home-feature-card">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="home-feature-icon me-3"
+                        style="margin: 0; width: 60px; height: 60px; font-size: 1.5rem;">
+                        <i class="bi bi-pencil-square"></i>
+                    </div>
+                    <div>
+                        <h3 class="mb-1">Method 2: Manual Data Entry</h3>
+                        <p class="text-muted mb-0">Fill in health metrics manually</p>
+                    </div>
+                </div>
+                <p class="mb-3">Enter your health information manually using our user-friendly form. Perfect if you
+                    don't have digital reports or prefer to input data yourself. Our intuitive interface guides you through each step.</p>
+                <ul class="mb-4">
+                    <li>✅ Easy-to-use interactive form</li>
+                    <li>✅ Real-time validation and guidance</li>
+                    <li>✅ Tooltips and help text for each field</li>
+                    <li>✅ Immediate risk assessment upon completion</li>
+                </ul>
+                <a href="/risk_assessment" class="btn-cta-outline w-100">
+                    <i class="bi bi-pencil-square me-2"></i>Enter Data Manually
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<!-- Admin Quick Actions -->
+<div class="container mb-5">
+    <div class="section-title">
+        <h2>Administration Quick Actions</h2>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <div class="col-12 col-lg-6">
+            <div class="home-feature-card">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="home-feature-icon me-3"
+                        style="margin: 0; width: 60px; height: 60px; font-size: 1.5rem;">
+                        <i class="bi bi-people-fill"></i>
+                    </div>
+                    <div>
+                        <h3 class="mb-1">User Management</h3>
+                        <p class="text-muted mb-0">Manage system users</p>
+                    </div>
+                </div>
+                <p class="mb-3">View, edit, and manage all users in the system. Monitor user activity, change roles, and maintain user accounts.</p>
+                <ul class="mb-4">
+                    <li>✅ View all registered users</li>
+                    <li>✅ Monitor user activity and status</li>
+                    <li>✅ Change user roles and permissions</li>
+                    <li>✅ Manage user accounts and access</li>
+                </ul>
+                <a href="{{ url_for('admin_users') }}" class="btn btn-primary w-100">
+                    <i class="bi bi-people-fill me-2"></i>Manage Users
+                </a>
+            </div>
+        </div>
+        <div class="col-12 col-lg-6">
+            <div class="home-feature-card">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="home-feature-icon me-3"
+                        style="margin: 0; width: 60px; height: 60px; font-size: 1.5rem;">
+                        <i class="bi bi-file-earmark-text-fill"></i>
+                    </div>
+                    <div>
+                        <h3 class="mb-1">System Reports</h3>
+                        <p class="text-muted mb-0">View all assessment reports</p>
+                    </div>
+                </div>
+                <p class="mb-3">Access comprehensive reports from all users. Monitor system usage, view assessment results, and analyze trends.</p>
+                <ul class="mb-4">
+                    <li>✅ View all user assessments</li>
+                    <li>✅ Monitor system usage statistics</li>
+                    <li>✅ Analyze assessment trends</li>
+                    <li>✅ Export and manage report data</li>
+                </ul>
+                <a href="{{ url_for('admin_all_reports') }}" class="btn-cta-outline w-100">
+                    <i class="bi bi-file-earmark-text-fill me-2"></i>View All Reports
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if not current_user.is_admin() %}
+<div class="container mb-5">
+    <div class="section-title">
+        <h2>Key Features</h2>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-12 col-md-4">
+            <div class="home-feature-card text-center">
+                <div class="home-feature-icon mb-3">
+                    <i class="bi bi-cpu"></i>
+                </div>
+                <h4 class="mb-2">AI-Powered Analysis</h4>
+                <p class="mb-3">Get an accurate prediction of your heart disease risk using multiple advanced AI models
+                    including KNN, Random Forest, and XGBoost.</p>
+                <a href="/risk_assessment" class="btn-cta-outline">Learn More</a>
+            </div>
+        </div>
+        <div class="col-12 col-md-4">
+            <div class="home-feature-card text-center">
+                <div class="home-feature-icon mb-3">
+                    <i class="bi bi-chat-dots"></i>
+                </div>
+                <h4 class="mb-2">Interactive Chat</h4>
+                <p class="mb-3">Have a conversation with our AI assistant to assess your heart health through natural
+                    language interaction.</p>
+                <a href="/chat_assessment" class="btn-cta-outline">Start Chat</a>
+            </div>
+        </div>
+        <div class="col-12 col-md-4">
+            <div class="home-feature-card text-center">
+                <div class="home-feature-icon mb-3">
+                    <i class="bi bi-graph-up"></i>
+                </div>
+                <h4 class="mb-2">Detailed Insights</h4>
+                <p class="mb-3">Get comprehensive explanations, visualizations, and personalized recommendations based
+                    on your assessment results.</p>
+                <a href="/explanation" class="btn-cta-outline">View Sample</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="container mb-5">
+    <div class="section-title">
+        <h2>Administration Features</h2>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-12 col-md-6">
+            <div class="home-feature-card text-center">
+                <div class="home-feature-icon mb-3">
+                    <i class="bi bi-shield-check"></i>
+                </div>
+                <h4 class="mb-2">User Security</h4>
+                <p class="mb-3">Manage user accounts, monitor activity, and ensure system security with comprehensive user management tools.</p>
+                <a href="{{ url_for('admin_users') }}" class="btn-cta-outline">Manage Users</a>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-6">
+            <div class="home-feature-card text-center">
+                <div class="home-feature-icon mb-3">
+                    <i class="bi bi-file-earmark-text"></i>
+                </div>
+                <h4 class="mb-2">Report Management</h4>
+                <p class="mb-3">Access and manage all user assessment reports, monitor data quality, and ensure compliance.</p>
+                <a href="{{ url_for('admin_all_reports') }}" class="btn-cta-outline">View Reports</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="container mb-5">
+    <div class="section-title">
+        <h2>System Statistics</h2>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-6 col-md-3">
+            <div class="home-feature-card text-center">
+                <h2 class="mb-2" style="color: var(--primary-color); font-weight: 700;">{{ total_assessments|default(0)
+                    }}</h2>
+                <div class="text-muted">Total Assessments</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="home-feature-card text-center">
+                <h2 class="mb-2" style="color: var(--success-color); font-weight: 700;">{{ (metrics.accuracy *
+                    100)|round|int if metrics else 0 }}%</h2>
+                <div class="text-muted">Model Accuracy</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="home-feature-card text-center">
+                <h2 class="mb-2" style="color: var(--secondary-color); font-weight: 700;">{{ reports_analyzed|default(0)
+                    }}</h2>
+                <div class="text-muted">Reports Analyzed</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="home-feature-card text-center">
+                <h2 class="mb-2" style="color: var(--warning-color); font-weight: 700;">{{ active_users|default(0) }}</h2>
+                <div class="text-muted">Active Users</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if not current_user.is_admin() %}
+<div class="container mb-5">
+    <div class="section-title">
+        <h2>How It Works</h2>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-12 col-md-4">
+            <div class="home-feature-card text-center">
+                <div class="home-feature-icon mb-3">
+                    <span style="font-weight: 700; font-size: 1.5rem;">1</span>
+                </div>
+                <h5 style="color: #f3f6fa; font-weight: 600;">Input Your Data</h5>
+                <p>Enter your health metrics or upload medical reports for analysis.</p>
+            </div>
+        </div>
+        <div class="col-12 col-md-4">
+            <div class="home-feature-card text-center">
+                <div class="home-feature-icon mb-3">
+                    <span style="font-weight: 700; font-size: 1.5rem;">2</span>
+                </div>
+                <h5 style="color: #f3f6fa; font-weight: 600;">AI Analysis</h5>
+                <p>Our AI models analyze your data using advanced machine learning algorithms.</p>
+            </div>
+        </div>
+        <div class="col-12 col-md-4">
+            <div class="home-feature-card text-center">
+                <div class="home-feature-icon mb-3">
+                    <span style="font-weight: 700; font-size: 1.5rem;">3</span>
+                </div>
+                <h5 style="color: #f3f6fa; font-weight: 600;">Get Results</h5>
+                <p>Receive detailed insights, risk assessment, and personalized recommendations.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if not current_user.is_admin() %}
+<div class="container mb-5">
+    <div class="mx-auto" style="max-width: 100%;">
+        <div class="home-hero text-center">
+            <div class=" mb-2">
+                <h2 class="mb-4" style="color: #f3f6fa; font-weight: 700;">Ready to Take Control of Your Heart Health?
+                </h2>
+                <p class="mb-0" style="color: #a1a8b0; font-size: 1.1rem;">Start your heart disease risk assessment today and
+                    get personalized insights powered by AI.</p>
+            </div>
+            <div class="d-flex flex-wrap gap-3 justify-content-center mb-4">
+                <a href="/risk_assessment" class="btn-cta">
+                    <i class="bi bi-heart-pulse me-2"></i>Start Assessment
+                </a>
+                <a href="/upload" class="btn-cta-outline">
+                    <i class="bi bi-upload me-2"></i>Upload Report
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,1266 @@
+{% extends "base_sidebar.html" %}
+
+{% block title %}Quick Assessment - Heart Disease Risk{% endblock %}
+
+{% block content %}
+<style>
+    /* Removed custom :root block to inherit sidebar and accent colors from base_sidebar.html */
+
+    .container {
+        padding: 2rem 0;
+    }
+
+    /* Enhanced Progress Steps */
+    .progress-steps {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin: 2rem 0 4rem 0;
+        position: relative;
+        padding: 2rem;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 1rem;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .progress-steps::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 2rem;
+        right: 2rem;
+        height: 3px;
+       /* background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));*/
+        border-radius: 2px;
+        z-index: 1;
+        opacity: 0.3;
+    }
+
+    .step {
+        position: relative;
+        z-index: 2;
+        text-align: center;
+        flex: 1;
+        max-width: 200px;
+    }
+
+    .step-icon {
+        width: 60px;
+        height: 60px;
+        background: var(--glass-bg);
+        border: 3px solid rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        color: #64748b;
+        font-size: 1.5rem;
+        backdrop-filter: blur(10px);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .step-icon::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: var(--gradient-primary);
+        border-radius: 50%;
+        opacity: 0;
+        transition: opacity 0.4s ease;
+        z-index: -1;
+    }
+
+    .step.active .step-icon {
+        background: transparent;
+        border-color: var(--primary-color);
+        color: white;
+        box-shadow: 0 0 30px rgba(126, 203, 255, 0.4);
+        transform: scale(1.1);
+    }
+
+    .step.active .step-icon::before {
+        opacity: 1;
+    }
+
+    .step-label {
+        font-size: 1rem;
+        color: #64748b;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .step.active .step-label {
+        color: var(--primary-color);
+        transform: translateY(-2px);
+    }
+
+    /* Enhanced Card Styles */
+    .assessment-card {
+        background: var(--glass-bg);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--glass-border);
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-xl);
+        overflow: hidden;
+        position: relative;
+        transition: all 0.3s ease;
+    }
+
+    .assessment-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: var(--gradient-primary);
+        z-index: 1;
+    }
+
+    .assessment-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-xl), 0 0 50px rgba(126, 203, 255, 0.1);
+    }
+
+    .card-header {
+        background: transparent;
+        color: white;
+        padding: 3rem 2.5rem 2rem;
+        border: none;
+        text-align: center;
+        position: relative;
+    }
+
+    .card-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 100px;
+        height: 100px;
+        background: radial-gradient(circle, rgba(126, 203, 255, 0.3) 0%, transparent 70%);
+        border-radius: 50%;
+        z-index: -1;
+    }
+
+    .card-header h2 {
+        margin: 0;
+        font-weight: 700;
+        font-size: 2rem;
+        background: linear-gradient(135deg, #fff 0%, #e2e8f0 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        text-shadow: none;
+    }
+
+    .card-header .icon {
+        font-size: 3rem;
+        color: var(--primary-color);
+        margin-bottom: 1rem;
+        display: block;
+        filter: drop-shadow(0 4px 8px rgba(126, 203, 255, 0.3));
+    }
+
+    .card-body {
+        padding: 2.5rem;
+    }
+
+    .assessment-intro {
+        margin-bottom: 3rem;
+        text-align: center;
+    }
+
+    .assessment-intro .lead {
+        color: #cbd5e1;
+        font-size: 1.2rem;
+        line-height: 1.7;
+        margin-bottom: 1.5rem;
+    }
+
+    .info-box {
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(147, 197, 253, 0.1));
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        color: #93c5fd;
+        font-weight: 500;
+        backdrop-filter: blur(10px);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .info-box::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+        transform: rotate(45deg);
+        animation: shimmer 3s infinite;
+    }
+
+    @keyframes shimmer {
+        0% {
+            transform: translateX(-100%) translateY(-100%) rotate(45deg);
+        }
+
+        100% {
+            transform: translateX(100%) translateY(100%) rotate(45deg);
+        }
+    }
+
+    .info-box i {
+        color: #60a5fa;
+        font-size: 1.5rem;
+        flex-shrink: 0;
+    }
+
+    /* Enhanced Form Styles */
+    .form-group {
+        margin-bottom: 2rem;
+        position: relative;
+    }
+
+    .form-label {
+        color: #f1f5f9;
+        margin-bottom: 0.8rem;
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        font-weight: 600;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .form-label i {
+        color: var(--primary-color);
+        font-size: 1.2rem;
+        width: 20px;
+        text-align: center;
+    }
+
+    .form-control,
+    .form-select {
+        background: rgba(255, 255, 255, 0.08);
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        border-radius: 0.8rem;
+        padding: 1rem 1.2rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        color: #f1f5f9;
+        font-size: 1rem;
+        backdrop-filter: blur(10px);
+        position: relative;
+    }
+
+    .form-control:focus,
+    .form-select:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 4px rgba(126, 203, 255, 0.1), 0 8px 16px rgba(0, 0, 0, 0.1);
+        outline: none;
+        background: rgba(255, 255, 255, 0.12);
+        transform: translateY(-2px);
+    }
+
+    .form-control::placeholder {
+        color: #64748b;
+        opacity: 0.8;
+    }
+
+    .input-group {
+        position: relative;
+        border-radius: 0.8rem;
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .input-group-text {
+        background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+        border: none;
+        color: white;
+        font-weight: 600;
+        font-size: 0.9rem;
+        padding: 1rem 1.2rem;
+        border-radius: 0;
+    }
+
+    .form-text {
+        color: #94a3b8;
+        font-size: 0.85rem;
+        margin-top: 0.5rem;
+        font-style: italic;
+    }
+
+    /* Enhanced Button Styles */
+    .btn-primary {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        border: none;
+        color: white;
+        border-radius: 3rem;
+        padding: 1.2rem 3rem;
+        font-weight: 700;
+        font-size: 1.2rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.8rem;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
+    }
+
+    .btn-primary::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: left 0.6s ease;
+    }
+
+    .btn-primary:hover::before {
+        left: 100%;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 28px rgba(126, 203, 255, 0.4);
+        color: #232946;
+    }
+
+    .btn-primary:active {
+        transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+        background: rgba(255, 255, 255, 0.1);
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        color: #f1f5f9;
+        border-radius: 3rem;
+        padding: 1rem 2rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        backdrop-filter: blur(10px);
+        margin-left: 1rem;
+    }
+
+    .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: #f1f5f9;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Enhanced Results Container */
+    .results-container {
+        background: var(--glass-bg);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--glass-border);
+        border-radius: var(--border-radius);
+        padding: 3rem;
+        margin-top: 3rem;
+        box-shadow: var(--shadow-xl);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .results-container::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: conic-gradient(from 0deg, transparent, rgba(126, 203, 255, 0.05), transparent);
+        animation: rotate 10s linear infinite;
+        z-index: -1;
+    }
+
+    @keyframes rotate {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    .results-container.active {
+        display: block !important;
+        animation: slideInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    @keyframes slideInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px) scale(0.95);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+
+    .risk-level {
+        text-align: center;
+        margin-bottom: 3rem;
+        padding: 2rem;
+        border-radius: 1rem;
+        position: relative;
+    }
+
+    .risk-level h2 {
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: 1rem;
+        text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    .risk-level.low {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.05));
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        color: #34d399;
+    }
+
+    .risk-level.medium {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(217, 119, 6, 0.05));
+        border: 1px solid rgba(245, 158, 11, 0.3);
+        color: #fbbf24;
+    }
+
+    .risk-level.high {
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.05));
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        color: #f87171;
+    }
+
+    .recommendations {
+        margin-top: 3rem;
+    }
+
+    .recommendations h4 {
+        color: #f1f5f9;
+        margin-bottom: 1.5rem;
+        font-size: 1.4rem;
+        font-weight: 700;
+        text-align: center;
+    }
+
+    .recommendations ul {
+        list-style: none;
+        padding: 0;
+        display: grid;
+        gap: 1rem;
+    }
+
+    .recommendations li {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 1.2rem;
+        border-radius: 0.8rem;
+        border-left: 4px solid var(--primary-color);
+        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+    }
+
+    .recommendations li:hover {
+        transform: translateX(8px);
+        background: rgba(255, 255, 255, 0.08);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .recommendations li::before {
+        content: '\2713';
+        position: relative;
+        left: 0;
+        top: 0;
+        background: var(--primary-color);
+        color: white;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+        font-weight: bold;
+        margin-right: 0.7rem;
+        flex-shrink: 0;
+    }
+
+    /* Loading Animation */
+    .loading-spinner {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: white;
+        animation: spin 1s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .container {
+            padding: 1rem;
+        }
+
+        .card-header {
+            padding: 2rem 1.5rem 1.5rem;
+        }
+
+        .card-body {
+            padding: 2rem 1.5rem;
+        }
+
+        .progress-steps {
+            margin: 2rem 0;
+            padding: 0 1rem;
+        }
+
+        .step-icon {
+            width: 50px;
+            height: 50px;
+            font-size: 1.2rem;
+        }
+
+        .step-label {
+            font-size: 0.9rem;
+        }
+
+        .btn-primary {
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+        }
+
+        .btn-secondary {
+            margin-left: 0;
+            margin-top: 1rem;
+        }
+
+        .risk-level h2 {
+            font-size: 2rem;
+        }
+
+        .results-container {
+            padding: 2rem;
+        }
+    }
+</style>
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Progress Steps 
+            <div class="progress-steps mb-4">
+                <div class="step active">
+                    <div class="step-icon">
+                        <i class="bi bi-person-check-fill"></i>
+                    </div>
+                    <div class="step-label">Personal Info</div>
+                </div>
+                <div class="step">
+                    <div class="step-icon">
+                        <i class="bi bi-heart-pulse"></i>
+                    </div>
+                    <div class="step-label">Health Metrics</div>
+                </div>
+                <div class="step">
+                    <div class="step-icon">
+                        <i class="bi bi-graph-up-arrow"></i>
+                    </div>
+                    <div class="step-label">Risk Analysis</div>
+                </div>
+            </div>-->
+
+            <div class="assessment-card" style="border-radius: 2rem;">
+                <div class="card-header">
+                    <i class="bi bi-heart-pulse-fill icon"></i>
+                    <h2 class="mb-0">
+                        Quick Heart Disease Risk Assessment
+                    </h2>
+                </div>
+                <div class="card-body">
+                    <div class="assessment-intro mb-4">
+                        <p class="lead">Get a comprehensive evaluation of your heart disease risk using our advanced
+                            AI-powered assessment system.</p>
+                        <div class="info-box">
+                            <i class="bi bi-shield-check-fill"></i>
+                            <span>Your data is secure and processed locally. Provide accurate information for the most
+                                reliable assessment.</span>
+                        </div>
+                    </div>
+
+                    <form action="{{ url_for('quick_assessment') }}" method="POST" class="assessment-form">
+                        <input type="hidden" name="assessment_type" value="form">
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="age" class="form-label">
+                                        <i class="bi bi-person-fill"></i>Age
+                                    </label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control" id="age" name="age" required min="20"
+                                            max="100" placeholder="Enter your age">
+                                        <span class="input-group-text">years</span>
+                                    </div>
+                                    <small>Age in years (20–100). <span style="color:#10b981">Normal: 20–65</span></small>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="sex" class="form-label">
+                                        <i class="bi bi-gender-ambiguous"></i>Biological Sex
+                                    </label>
+                                    <select class="form-select" id="sex" name="sex" required>
+                                        <option value="">Select biological sex</option>
+                                        <option value="1">Male</option>
+                                        <option value="0">Female</option>
+                                    </select>
+                                    <small>Sex (1 = male, 0 = female). <span style="color:#10b981">Normal: Any</span></small>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="trestbps" class="form-label">
+                                        <i class="bi bi-heart-pulse"></i>Resting Blood Pressure
+                                    </label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control" id="trestbps" name="trestbps" required
+                                            min="90" max="200" placeholder="e.g., 120">
+                                        <span class="input-group-text">mm Hg</span>
+                                    </div>
+                                    <small>Resting blood pressure in mm Hg (90–200). <span style="color:#10b981">Normal: 90–120</span></small>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="chol" class="form-label">
+                                        <i class="bi bi-droplet-fill"></i>Serum Cholesterol
+                                    </label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control" id="chol" name="chol" required
+                                            min="100" max="600" placeholder="e.g., 200">
+                                        <span class="input-group-text">mg/dl</span>
+                                    </div>
+                                    <small>Serum cholesterol in mg/dl (100–600). <span style="color:#10b981">Normal: 100–200</span></small>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="thalach" class="form-label">
+                                        <i class="bi bi-activity"></i>Maximum Heart Rate
+                                    </label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control" id="thalach" name="thalach" required
+                                            min="120" max="200" placeholder="e.g., 150">
+                                        <span class="input-group-text">bpm</span>
+                                    </div>
+                                    <small>Maximum heart rate achieved (120–200). <span style="color:#10b981">Normal: 150–200</span></small>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="oldpeak" class="form-label">
+                                        <i class="bi bi-graph-down"></i>ST Depression
+                                    </label>
+                                    <div class="input-group">
+                                        <input type="number" class="form-control" id="oldpeak" name="oldpeak" required
+                                            min="0" max="6.2" step="0.1" placeholder="e.g., 1.0">
+                                        <span class="input-group-text">mm</span>
+                                    </div>
+                                    <small>ST depression induced by exercise (0–6.2). <span style="color:#10b981">Normal: 0–1.0</span></small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-5 text-center">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-cpu-fill"></i>Analyze Risk with AI
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Results Container -->
+<div id="results-container" class="results-container" style="display: none;">
+    <div id="results-content">
+        <!-- Results will be populated here -->
+    </div>
+</div>
+
+<style>
+    .results-container {
+        background: rgba(30, 41, 59, 0.25); /* semi-transparent dark */
+        border-radius: 1.5rem;
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.18);
+        backdrop-filter: blur(16px) saturate(180%);
+        -webkit-backdrop-filter: blur(16px) saturate(180%);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        padding: 2rem;
+        margin-top: 2rem;
+    }
+
+    .results-container.active {
+        display: block !important;
+        animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .risk-level {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .risk-level.low {
+        color: var(--success-color);
+    }
+
+    .risk-level.medium {
+        color: var(--warning-color);
+    }
+
+    .risk-level.high {
+        color: var(--danger-color);
+    }
+
+    .recommendations {
+        margin-top: 2rem;
+    }
+
+    .recommendations h4 {
+        color: #f3f6fa;
+        margin-bottom: 1rem;
+    }
+
+    .recommendations ul {
+        list-style: none;
+        padding: 0;
+    }
+
+    .recommendations li {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 0.75rem;
+        margin-bottom: 0.5rem;
+        border-radius: 0.5rem;
+        border-left: 4px solid var(--primary-color);
+    }
+
+    .content-card {
+        background: #232946;
+        border-radius: 1.2rem;
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.18);
+        padding: 2rem 2.5rem;
+        margin-bottom: 2rem;
+        color: #f3f6fa;
+    }
+    .content-card h2 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        color: #7ecbff;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .alert-modern {
+        border-radius: 0.8rem;
+        padding: 1.2rem 1.5rem;
+        margin-bottom: 0.5rem;
+        font-size: 1.05rem;
+        background: #232946;
+        color: #f3f6fa;
+        border-left: 6px solid #7ecbff;
+    }
+    .alert-modern.danger {
+        background: #ffeded;
+        color: #b91c1c;
+        border-left: 6px solid #ef4444;
+    }
+    .alert-modern.warning {
+        background: #fffbe6;
+        color: #b45309;
+        border-left: 6px solid #f59e42;
+    }
+    .alert-modern.success {
+        background: #e6fff4;
+        color: #059669;
+        border-left: 6px solid #10b981;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.querySelector('.assessment-form');
+        const steps = document.querySelectorAll('.step');
+
+        // Add floating label effect
+        document.querySelectorAll('.form-control, .form-select').forEach(input => {
+            input.addEventListener('focus', function () {
+                this.parentElement.classList.add('focused');
+            });
+
+            input.addEventListener('blur', function () {
+                if (!this.value) {
+                    this.parentElement.classList.remove('focused');
+                }
+            });
+
+            // Add input validation feedback
+            input.addEventListener('input', function () {
+                validateField(this);
+            });
+        });
+
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            // Validate all fields first
+            let isValid = true;
+            form.querySelectorAll('.form-control, .form-select').forEach(input => {
+                if (!validateField(input)) {
+                    isValid = false;
+                }
+            });
+
+            if (!isValid) {
+                showNotification('Please fill in all required fields correctly.', 'error');
+                return;
+            }
+
+            // Update progress to step 2
+            updateProgressStep(1);
+
+            const formData = new FormData(form);
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+
+            // Enhanced loading state
+            submitBtn.innerHTML = '<span class="loading-spinner"></span>Analyzing with AI...';
+            submitBtn.disabled = true;
+            submitBtn.style.background = 'linear-gradient(135deg, #6366f1, #8b5cf6)';
+
+            // Add pulse animation to the card
+            document.querySelector('.assessment-card').style.animation = 'pulse 2s infinite';
+
+            showNotification('Processing your health data...', 'info');
+
+            fetch('/quick_assessment', {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Update progress to step 3
+                    updateProgressStep(2);
+
+                    setTimeout(() => {
+                        displayResults(data);
+                        showNotification('Analysis complete!', 'success');
+                    }, 500);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showNotification('An error occurred during assessment. Please try again.', 'error');
+                    updateProgressStep(0); // Reset to first step
+                })
+                .finally(() => {
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
+                    submitBtn.style.background = '';
+                    document.querySelector('.assessment-card').style.animation = '';
+                });
+        });
+    });
+
+    function validateField(input) {
+        const value = input.value.trim();
+        const fieldContainer = input.closest('.form-group');
+
+        // Remove existing validation classes
+        fieldContainer.classList.remove('field-error', 'field-success');
+
+        if (!value) {
+            fieldContainer.classList.add('field-error');
+            return false;
+        }
+
+        // Field-specific validation
+        const fieldName = input.name;
+        let isValid = true;
+
+        switch (fieldName) {
+            case 'age':
+                isValid = value >= 20 && value <= 100;
+                break;
+            case 'trestbps':
+                isValid = value >= 90 && value <= 200;
+                break;
+            case 'chol':
+                isValid = value >= 100 && value <= 600;
+                break;
+            case 'thalach':
+                isValid = value >= 120 && value <= 200;
+                break;
+            case 'oldpeak':
+                isValid = value >= 0 && value <= 6.2;
+                break;
+            case 'sex':
+                isValid = value === '0' || value === '1';
+                break;
+        }
+
+        if (isValid) {
+            fieldContainer.classList.add('field-success');
+        } else {
+            fieldContainer.classList.add('field-error');
+        }
+
+        return isValid;
+    }
+
+    function updateProgressStep(activeIndex) {
+        const steps = document.querySelectorAll('.step');
+
+        steps.forEach((step, index) => {
+            step.classList.remove('active', 'completed');
+
+            if (index < activeIndex) {
+                step.classList.add('completed');
+                step.querySelector('.step-icon i').className = 'bi bi-check-circle-fill';
+            } else if (index === activeIndex) {
+                step.classList.add('active');
+            }
+        });
+    }
+
+    function showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.className = `notification notification-${type}`;
+        notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 1rem 1.5rem;
+        border-radius: 0.5rem;
+        color: white;
+        font-weight: 600;
+        z-index: 10000;
+        animation: slideInRight 0.3s ease-out;
+        max-width: 300px;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    `;
+
+        switch (type) {
+            case 'success':
+                notification.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+                break;
+            case 'error':
+                notification.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
+                break;
+            case 'info':
+            default:
+                notification.style.background = 'linear-gradient(135deg, #6366f1, #8b5cf6)';
+                break;
+        }
+
+        notification.textContent = message;
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+            notification.style.animation = 'slideOutRight 0.3s ease-out';
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        }, 3000);
+    }
+
+    function displayResults(data) {
+        const resultsContainer = document.getElementById('results-container');
+        const resultsContent = document.getElementById('results-content');
+
+        let html = '';
+
+        if (data.assessment_type === 'emergency') {
+            html = `
+            <div class="emergency-actions">
+                <h2 class="text-center mb-4" style="color: var(--danger-color); animation: pulse 1s infinite;">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                    ${data.message}
+                </h2>
+                <div class="text-center mt-4">
+                    <a href="tel:911" class="btn-primary" style="background: linear-gradient(135deg, #ef4444, #dc2626); color: white; font-size: 1.5rem; padding: 1.5rem 3rem; animation: pulse 1s infinite;">
+                        <i class="bi bi-telephone-fill me-2"></i>Call 911 Now
+                    </a>
+                </div>
+            </div>
+        `;
+        } else {
+            const riskClass = data.risk_level ? data.risk_level.toLowerCase() : 'unknown';
+            const riskIcon = getRiskIcon(riskClass);
+            const riskColor = getRiskColor(riskClass);
+
+            html = `
+            <div class="risk-level ${riskClass}" style="animation: fadeInScale 0.6s ease-out;">
+                <div style="font-size: 4rem; margin-bottom: 1rem; color: ${riskColor};">
+                    ${riskIcon}
+                </div>
+                <h2 class="mb-3">
+                    ${data.message}
+                </h2>
+                <p class="lead">${data.description || ''}</p>
+                
+                ${data.individual_predictions && data.individual_predictions.quick_assessment !== undefined ? `
+                    <div class="model-predictions mt-4">
+                        <h5 style="color: #cbd5e1; margin-bottom: 1rem;">AI Model Used</h5>
+                        <div class="row g-3 justify-content-center">
+                            <div class="col-md-4">
+                                <div class="prediction-card text-center" style="padding: 2rem 1rem;">
+                                    <div class="prediction-label" style="display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
+                                        <span style="
+                                            display: flex;
+                                            align-items: center;
+                                            justify-content: center;
+                                            background: rgba(126, 203, 255, 0.12);
+                                            border-radius: 50%;
+                                            width: 56px;
+                                            height: 56px;
+                                            margin-bottom: 0.5rem;
+                                        ">
+                                            <i class="bi bi-cpu-fill" style="color:#7ecbff; font-size:2.2rem;"></i>
+                                        </span>
+                                        <span style="font-size: 1.1rem; color: #7ecbff; font-weight: 600;">Quick Assessment Model</span>
+                                    </div>
+                                    <div class="prediction-value" style="font-size: 2.2rem; font-weight: bold; margin-top: 1rem;">
+                                        ${typeof data.individual_predictions.quick_assessment === 'number' ? (data.individual_predictions.quick_assessment * 100).toFixed(1) + '%' : 'N/A'}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                ` : ''}
+            </div>
+            
+            ${data.recommendations ? `
+                <div class="recommendations" style="animation: slideInUp 0.6s ease-out 0.2s both;">
+                    <h4><i class="bi bi-lightbulb-fill me-2"></i>Personalized Recommendations</h4>
+                    <ul>
+                        ${data.recommendations.map((rec, index) => `
+                            <li style="animation-delay: ${0.1 * index}s;">${rec}</li>
+                        `).join('')}
+                    </ul>
+                </div>
+            ` : ''}
+            
+            ${data.next_steps ? `
+                <div class="recommendations" style="animation: slideInUp 0.6s ease-out 0.4s both;">
+                    <h4><i class="bi bi-arrow-right-circle-fill me-2"></i>Next Steps</h4>
+                    <ul>
+                        ${data.next_steps.map((step, index) => `
+                            <li style="animation-delay: ${0.1 * index}s;">${step}</li>
+                        `).join('')}
+                    </ul>
+                </div>
+            ` : ''}
+            
+            <div class="text-center mt-5" style="animation: fadeInUp 0.6s ease-out 0.6s both;">
+                ${data.detailed_url ? `
+                    <a href="${data.detailed_url}" class="btn-primary">
+                        <i class="bi bi-graph-up"></i>View Detailed Analysis
+                    </a>
+                ` : ''}
+                <button type="button" class="btn-secondary" onclick="window.location.reload()">
+                    <i class="bi bi-arrow-repeat"></i>New Assessment
+                </button>
+            </div>
+        `;
+        }
+
+        resultsContent.innerHTML = html;
+        resultsContainer.classList.add('active');
+
+        // Scroll to results with smooth animation
+        setTimeout(() => {
+            resultsContainer.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }, 300);
+
+        // Recommendations
+        let recHtml = '';
+        if (data.recommendations && data.recommendations.length > 0) {
+            recHtml = data.recommendations.map((rec, index) => `
+                <li style="animation-delay: ${0.1 * index}s;">${rec}</li>
+            `).join('');
+        }
+        document.querySelectorAll('.recommendations ul').forEach(ul => { ul.innerHTML = recHtml; });
+    }
+
+    function getRiskIcon(riskClass) {
+        switch (riskClass) {
+            case 'low': return '🟢';
+            case 'medium': return '🟡';
+            case 'high': return '🔴';
+            default: return '⚪';
+        }
+    }
+
+    function getRiskColor(riskClass) {
+        switch (riskClass) {
+            case 'low': return '#34d399';
+            case 'medium': return '#fbbf24';
+            case 'high': return '#f87171';
+            default: return '#94a3b8';
+        }
+    }
+
+    // Add CSS animations for notifications
+    const style = document.createElement('style');
+    style.textContent = `
+    @keyframes slideInRight {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    
+    @keyframes slideOutRight {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+    }
+    
+    @keyframes fadeInScale {
+        from { opacity: 0; transform: scale(0.9); }
+        to { opacity: 1; transform: scale(1); }
+    }
+    
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .field-error .form-control,
+    .field-error .form-select {
+        border-color: #ef4444 !important;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
+    }
+    
+    .field-success .form-control,
+    .field-success .form-select {
+        border-color: #10b981 !important;
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1) !important;
+    }
+    
+    .step.completed .step-icon {
+        background: linear-gradient(135deg, #10b981, #059669) !important;
+        border-color: #10b981 !important;
+        color: white !important;
+    }
+    
+    .prediction-card {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 0.8rem;
+        padding: 1rem;
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+    
+    .prediction-card:hover {
+        background: rgba(255, 255, 255, 0.1);
+        transform: translateY(-2px);
+    }
+    
+    .prediction-label {
+        color: #94a3b8;
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .prediction-value {
+        color: #f1f5f9;
+        font-size: 1.5rem;
+        font-weight: 700;
+    }
+
+    .btn-cta:hover, .btn-cta-outline:hover {
+        color: #232946 !important;
+    }
+
+    button.btn.btn-primary.btn-lg:hover,
+    button.btn.btn-primary.btn-lg:focus {
+        color: #232946 !important;
+    }
+
+    /* Main assessment card/container */
+    .assessment-form-card, .content-card {
+        border-radius: 2rem !important;
+    }
+    /* Input fields */
+    .form-control, .input-group, select {
+        border-radius: 1.2rem !important;
+    }
+    /* Recommendations card (already .content-card) */
+    .alert-modern {
+        border-radius: 1.2rem !important;
+    }
+`;
+    document.head.appendChild(style);
+</script>
+{% endblock %}

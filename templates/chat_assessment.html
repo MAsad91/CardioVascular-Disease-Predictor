@@ -1,0 +1,462 @@
+{% extends "base_sidebar.html" %}
+
+{% block title %}Professional Cardiovascular Consultation{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-10 offset-md-1">
+            <div class="card shadow assessment-card">
+                <div class="card-header bg-primary text-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h3 class="card-title mb-0">Professional Cardiovascular Consultation</h3>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-outline-light btn-sm new-assessment-btn" onclick="startNewAssessment()" title="Start New Assessment">
+                                <i class="bi bi-arrow-clockwise"></i> New Assessment
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="chat-history" id="chat-history">
+                        <div class="chat-messages" id="chat-messages">
+                            <!-- Initial greeting will be loaded dynamically -->
+                        </div>
+                    </div>
+                    <div class="chat-input">
+                        <form id="chat-form" class="mb-0">
+                            <div class="input-group">
+                                <input type="text" id="user-input" class="form-control" placeholder="Type your answer here..." autocomplete="off">
+                                <button type="submit" class="btn btn-primary" id="send-button">
+                                    <i class="bi bi-send"></i> Send
+                                </button>
+                            </div>
+                            <div id="input-help" class="form-text text-muted mt-1">Please describe any symptoms you're experiencing, or type 'no' if none.</div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<style>
+:root {
+    --primary-color: #7ecbff;
+    --secondary-color: #7fffd4;
+    --bg-darker: #232946;
+    --bg-darkest: #1a1e3a;
+    --text-light: #f3f6fa;
+    --text-muted: #bdbddd;
+}
+
+.card {
+    border: none;
+    border-radius: 1rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    background: var(--bg-darker);
+}
+
+.card-header {
+    border-radius: 1rem 1rem 0 0 !important;
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%) !important;
+    padding: 1.5rem;
+    border: none;
+}
+
+.card-header h3 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--bg-darker);
+    text-shadow: none;
+}
+
+.new-assessment-btn {
+    background: transparent !important;
+    border: 2px solid var(--bg-darker) !important;
+    color: var(--bg-darker) !important;
+    font-weight: 600;
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.new-assessment-btn:hover {
+    background: var(--bg-darker) !important;
+    color: var(--text-light) !important;
+    border-color: var(--bg-darker) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.new-assessment-btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(35, 41, 70, 0.3);
+}
+
+.new-assessment-btn i {
+    font-size: 1rem;
+}
+
+.chat-container {
+    display: flex;
+    flex-direction: column;
+    height: 60vh;
+    background: var(--bg-darkest);
+    border-radius: 0.8rem;
+    overflow: hidden;
+}
+
+.chat-history {
+    max-height: 350px;
+    min-height: 150px;
+    overflow-y: auto;
+    padding: 0;
+    background: none;
+    border-radius: 1rem;
+    margin-bottom: 1rem;
+}
+
+.chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    background: var(--bg-darkest);
+}
+
+.message {
+    max-width: 80%;
+    padding: 1rem 1.5rem;
+    border-radius: 1rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+.message.bot {
+    align-self: flex-start;
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    color: var(--bg-darker);
+    border: 1px solid rgba(126, 203, 255, 0.3);
+    font-weight: 500;
+}
+
+.message.user {
+    align-self: flex-end;
+    background: var(--bg-darker);
+    color: var(--text-light);
+    border: 1px solid rgba(126, 203, 255, 0.3);
+}
+
+.message.error {
+    align-self: center;
+    background: #dc3545;
+    color: #fff;
+    border: 1px solid #dc3545;
+    text-align: center;
+    max-width: 90%;
+}
+
+.chat-input {
+    padding: 1rem;
+    background: var(--bg-darker);
+    border-top: 1px solid rgba(126, 203, 255, 0.2);
+}
+
+.chat-input .input-group {
+    margin: 0;
+}
+
+#user-input {
+    border-radius: 0.8rem 0 0 0.8rem;
+    border: 1px solid rgba(126, 203, 255, 0.3);
+    padding: 0.8rem 1.2rem;
+    font-size: 1rem;
+    background: var(--bg-darkest);
+    color: var(--text-light);
+}
+
+#user-input::placeholder {
+    color: var(--text-muted);
+}
+
+#user-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(126, 203, 255, 0.2);
+    background: var(--bg-darkest);
+    color: var(--text-light);
+}
+
+#user-input:disabled {
+    background-color: rgba(26, 30, 58, 0.5);
+    color: var(--text-muted);
+    cursor: not-allowed;
+    border-color: rgba(126, 203, 255, 0.1);
+}
+
+.chat-input .btn-primary {
+    border-radius: 0 0.8rem 0.8rem 0;
+    padding: 0.8rem 1.5rem;
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    border: none;
+    font-weight: 600;
+    color: var(--bg-darker);
+}
+
+.chat-input .btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: rgba(126, 203, 255, 0.3);
+}
+
+.chat-input .btn-primary:hover:not(:disabled) {
+    background: linear-gradient(135deg, var(--secondary-color) 0%, var(--primary-color) 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(126, 203, 255, 0.3);
+}
+
+.chat-input .btn-primary i {
+    margin-right: 0.5rem;
+}
+
+#input-help {
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+/* Scrollbar styling for dark theme */
+.chat-messages::-webkit-scrollbar {
+    width: 8px;
+}
+
+.chat-messages::-webkit-scrollbar-track {
+    background: var(--bg-darkest);
+    border-radius: 4px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+    background: rgba(126, 203, 255, 0.3);
+    border-radius: 4px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb:hover {
+    background: rgba(126, 203, 255, 0.5);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.spin {
+    animation: spin 1s linear infinite;
+}
+
+@media (max-width: 768px) {
+    .chat-container {
+        height: calc(100vh - 200px);
+    }
+    
+    .message {
+        max-width: 90%;
+    }
+    
+    .chat-input {
+        padding: 0.75rem;
+    }
+}
+
+.assessment-card {
+    border-radius: 2rem !important;
+}
+</style>
+
+<script>
+const chatMessages = document.getElementById('chat-messages');
+const chatForm = document.getElementById('chat-form');
+const userInput = document.getElementById('user-input');
+const sendButton = document.getElementById('send-button');
+const inputHelp = document.getElementById('input-help');
+
+let isProcessing = false;
+
+function addMessage(message, isUser = false) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${isUser ? 'user' : 'bot'}`;
+    messageDiv.innerHTML = `<p>${message}</p>`;
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function addErrorMessage(message) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'message error';
+    messageDiv.innerHTML = `<p>${message}</p>`;
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function setInputState(enabled, placeholder) {
+    userInput.disabled = !enabled;
+    userInput.placeholder = placeholder;
+    sendButton.disabled = !enabled;
+}
+
+function updateInputHelp(message) {
+    inputHelp.textContent = message;
+}
+
+async function sendMessage(message) {
+    if (isProcessing) return;
+    
+    isProcessing = true;
+    setInputState(false, 'Processing...');
+    
+    try {
+        const response = await fetch('/chat_assessment', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ message }),
+        });
+
+        const data = await response.json();
+        
+        if (data.success) {
+            if (data.bot_message) {
+                addMessage(data.bot_message, false);
+            }
+            
+            if (data.current_stage && !data.completed) {
+                setInputState(true, data.input_placeholder || 'Type your response here...');
+                if (data.input_help) {
+                    updateInputHelp(data.input_help);
+                } else {
+                    updateInputHelp('Please provide your response');
+                }
+                
+                // Focus on input for better user experience
+                userInput.focus();
+            } else if (data.completed) {
+                setInputState(false, 'Consultation completed');
+                updateInputHelp('Consultation completed. Click "New Assessment" to start fresh.');
+            }
+        } else {
+            addErrorMessage(data.error || 'An error occurred. Please try again.');
+            // Re-enable input even on error
+            setInputState(true, 'Type your answer here...');
+            updateInputHelp('Please try again');
+            
+            if (data.reset) {
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
+                return;
+            }
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        addErrorMessage('A network error occurred. Please try again.');
+        // Re-enable input on network error
+        setInputState(true, 'Type your answer here...');
+        updateInputHelp('Please try again');
+    } finally {
+        isProcessing = false;
+    }
+}
+
+chatForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const message = userInput.value.trim();
+    if (!message) return;
+
+    addMessage(message, true);
+    userInput.value = '';
+    await sendMessage(message);
+});
+
+function startNewAssessment() {
+    if (confirm('Are you sure you want to start a new assessment? This will reset your current progress.')) {
+        // Clear session data before reloading
+        fetch('/clear_assessment', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                console.log('Assessment data cleared from server');
+            } else {
+                console.error('Failed to clear assessment data:', data.error);
+            }
+            // Reload the page regardless of success/failure
+            window.location.reload();
+        })
+        .catch(error => {
+            console.error('Error clearing assessment data:', error);
+            // Still reload even if clearing failed
+            window.location.reload();
+        });
+    }
+}
+
+
+
+
+
+// Load initial greeting when page loads
+window.addEventListener('DOMContentLoaded', function() {
+    loadInitialGreeting();
+});
+
+async function loadInitialGreeting() {
+    try {
+        const response = await fetch('/chat_assessment_greeting', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+
+        const data = await response.json();
+        
+        if (data.success && data.greeting) {
+            addMessage(data.greeting, false);
+        }
+        
+        // Initialize the chat input state
+        setInputState(true, 'Type your response here...');
+        updateInputHelp('Please take your time and describe what brings you here today');
+        
+    } catch (error) {
+        console.error('Error loading initial greeting:', error);
+        // Fallback greeting if API fails
+        addMessage('Hello! I\'m Dr. Assistant. Please tell me what brings you here today and describe any symptoms or concerns you\'re experiencing.', false);
+        setInputState(true, 'Type your response here...');
+        updateInputHelp('Please describe what brings you here today');
+    }
+}
+
+
+</script>
+{% endblock %} 
