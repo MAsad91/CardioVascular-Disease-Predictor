@@ -208,30 +208,15 @@
         border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
-    .comparison-grid {
-        display: flex;
-        flex-direction: column;
-        gap: 1.5rem;
-        margin-top: 1.5rem;
-    }
-
     .comparison-item {
         text-align: center;
-        padding: 2rem;
-        background: white;
-        border-radius: calc(var(--border-radius) - 0.5rem);
-        border: 1px solid #e2e8f0;
-        box-shadow: var(--shadow);
-        width: 100%;
-        max-width: none;
+        border-radius: 0.75rem;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
 
-    .comparison-title {
-        font-weight: 600;
-        color: var(--dark-color);
-        margin-bottom: 1rem;
-        text-transform: capitalize;
-        font-size: 1.1rem;
+    .comparison-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     }
 
     .comparison-item img {
@@ -460,34 +445,44 @@
 
         <!-- Key Risk Factors Chart -->
         {% if explanation.key_risk_factors_img %}
-            <div class="mt-4 text-center">
-                <h5 class="mb-3" style="color: #f3f6fa; font-weight: 600;">Your Key Risk Factors</h5>
-                <img src="data:image/png;base64,{{ explanation.key_risk_factors_img }}" 
-                     class="img-fluid rounded shadow" 
-                     alt="Your Key Risk Factors Chart"
-                     style="max-height: 400px; border-radius: var(--border-radius);">
-                <p class="mt-2" style="color: #bdbddd; font-size: 0.9rem; font-style: italic;">
+            <div class="mt-5 text-center">
+                <h5 class="mb-4" style="color: #f3f6fa; font-weight: 600; font-size: 1.5rem;">
+                    <i class="bi bi-bar-chart me-2"></i>Your Key Risk Factors
+                </h5>
+                <div class="chart-container" style="position: relative; height: 450px; width: 100%; max-width: 700px; margin: 0 auto;">
+                    <img src="data:image/png;base64,{{ explanation.key_risk_factors_img }}" 
+                         class="img-fluid rounded shadow" 
+                         alt="Your Key Risk Factors Chart"
+                         style="max-height: 450px; max-width: 700px; width: auto; height: auto; object-fit: contain; border-radius: var(--border-radius);">
+                </div>
+                <p class="mt-3" style="color: #bdbddd; font-size: 1rem; font-style: italic;">
+                    <i class="bi bi-info-circle me-2"></i>
                     This chart shows your most significant risk factors. Longer bars indicate values that may contribute more to your risk level.
                 </p>
-                <div class="chart-explanation mt-3" style="background: #232946; color: #f3f6fa; font-size: 1.1rem; font-weight: 500; padding: 1rem 1.5rem; border-radius: 1rem; text-align: left;">
-                    <b>What is a Risk Factor?</b> A risk factor is a health measurement or characteristic that increases your chance of heart disease. The higher the bar above, the more that factor is influencing your risk.
+                <div class="chart-explanation mt-4" style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05)); color: #f3f6fa; font-size: 1.1rem; font-weight: 500; padding: 1.5rem; border-radius: 1rem; text-align: left; border: 1px solid rgba(255, 255, 255, 0.2);">
+                    <b><i class="bi bi-question-circle me-2"></i>What is a Risk Factor?</b> A risk factor is a health measurement or characteristic that increases your chance of heart disease. The higher the bar above, the more that factor is influencing your risk.
                 </div>
             </div>
         {% endif %}
 
-        <!-- Feature Impact Analysis (Updated Chart) -->
+        <!-- Feature Impact Analysis Chart -->
         {% if explanation.risk_factor_img %}
-            <div class="mt-4 text-center">
-                <h5 class="mb-3" style="color: #f3f6fa; font-weight: 600;">Feature Impact Analysis</h5>
-                <img src="data:image/png;base64,{{ explanation.risk_factor_img }}" 
-                     class="img-fluid rounded shadow" 
-                     alt="Feature Impact Analysis Chart"
-                     style="max-height: 400px; border-radius: var(--border-radius);">
-                <p class="mt-2" style="color: #bdbddd; font-size: 0.9rem; font-style: italic;">
+            <div class="mt-5 text-center">
+                <h5 class="mb-4" style="color: #f3f6fa; font-weight: 600; font-size: 1.5rem;">
+                    <i class="bi bi-activity me-2"></i>Feature Impact Analysis
+                </h5>
+                <div class="chart-container" style="position: relative; height: 500px; width: 100%; max-width: 800px; margin: 0 auto;">
+                    <img src="data:image/png;base64,{{ explanation.risk_factor_img }}" 
+                         class="img-fluid rounded shadow" 
+                         alt="Feature Impact Analysis Chart"
+                         style="max-height: 500px; max-width: 800px; width: auto; height: auto; object-fit: contain; border-radius: var(--border-radius);">
+                </div>
+                <p class="mt-3" style="color: #bdbddd; font-size: 1rem; font-style: italic;">
+                    <i class="bi bi-info-circle me-2"></i>
                     This chart shows how your health parameters impact your overall risk assessment based on their importance and your specific values.
                 </p>
-                <div class="chart-explanation mt-3" style="background: #232946; color: #f3f6fa; font-size: 1.1rem; font-weight: 500; padding: 1rem 1.5rem; border-radius: 1rem; text-align: left;">
-                    <b>What Does Feature Impact Mean?</b> This chart shows which of your health measurements most affect your risk prediction. Features with higher impact scores are the most influential in your result.
+                <div class="chart-explanation mt-4" style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05)); color: #f3f6fa; font-size: 1.1rem; font-weight: 500; padding: 1.5rem; border-radius: 1rem; text-align: left; border: 1px solid rgba(255, 255, 255, 0.2);">
+                    <b><i class="bi bi-question-circle me-2"></i>What Does Feature Impact Mean?</b> This chart shows which of your health measurements most affect your risk prediction. Features with higher impact scores are the most influential in your result.
                 </div>
             </div>
         {% endif %}
@@ -497,23 +492,28 @@
     {% if explanation.boxplots %}
     <div class="content-card">
         <h2><i class="bi bi-people"></i>Comparison with Similar Cases</h2>
-        <p class="content-text">See how your health metrics compare to other patients with similar profiles:</p>
+        <p class="content-text text-center">See how your health metrics compare to other patients with similar profiles:</p>
         <div class="comparison-container">
-            <div class="comparison-grid">
-                {% for feature in ['age', 'sex', 'cp', 'trestbps', 'chol'] %}
-                    {% if explanation.boxplots[feature] %}
-                        <div class="comparison-item">
-                            <div class="comparison-title">{{ feature.replace('_', ' ').title() }}</div>
-                            <img src="data:image/png;base64,{{ explanation.boxplots[feature] }}" 
-                                 class="img-fluid" 
-                                 alt="Comparison for {{ feature }}">
+            {% for feature in ['age', 'sex', 'cp', 'trestbps', 'chol'] %}
+                {% if explanation.boxplots[feature] %}
+                    <div class="mb-3">
+                        <div class="comparison-item p-3" style="background: rgba(255, 255, 255, 0.05); border-radius: 0.75rem; border: 1px solid rgba(255, 255, 255, 0.1); width: 100%;">
+                            <div class="comparison-title text-center mb-3" style="color: #f3f6fa; font-weight: 600; font-size: 1.1rem;">
+                                <i class="bi bi-graph-up me-2"></i>{{ feature.replace('_', ' ').title() }}
+                            </div>
+                            <div class="chart-container text-center" style="position: relative; height: 280px; width: 100%; margin: 0 auto;">
+                                <img src="data:image/png;base64,{{ explanation.boxplots[feature] }}" 
+                                     class="img-fluid rounded shadow" 
+                                     alt="Comparison for {{ feature }}"
+                                     style="max-height: 280px; width: 100%; height: auto; object-fit: contain;">
+                            </div>
                         </div>
-                    {% endif %}
-                {% endfor %}
-            </div>
+                    </div>
+                {% endif %}
+            {% endfor %}
         </div>
-        <div class="chart-explanation mt-3" style="background: #232946; color: #f3f6fa; font-size: 1.1rem; font-weight: 500; padding: 1rem 1.5rem; border-radius: 1rem; text-align: left; margin-top: 2rem;">
-            <b>How Do You Compare to Others?</b> Your health values are compared to similar patients. If your value is outside the typical range, it may mean you have a higher or lower risk than most people like you.
+        <div class="chart-explanation mt-4" style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05)); color: #f3f6fa; font-size: 1.1rem; font-weight: 500; padding: 1.5rem; border-radius: 1rem; text-align: left; border: 1px solid rgba(255, 255, 255, 0.2);">
+            <b><i class="bi bi-question-circle me-2"></i>How Do You Compare to Others?</b> Your health values are compared to similar patients. If your value is outside the typical range, it may mean you have a higher or lower risk than most people like you.
         </div>
     </div>
     {% endif %}

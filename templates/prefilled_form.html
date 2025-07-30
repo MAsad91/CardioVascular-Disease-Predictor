@@ -24,17 +24,35 @@
             {% endif %}
         {% endwith %}
 
-        {% if is_ecg %}
+        {% if ecg_visualization %}
             <div class="card mb-4">
                 <div class="card-header">
-                    <h4>ECG Analysis</h4>
+                    <h4><i class="bi bi-heart-pulse me-2"></i>ECG Analysis</h4>
                 </div>
-                <div class="card-body">
-                    {% if ecg_visualization %}
-                        <img src="data:image/png;base64,{{ ecg_visualization }}" class="img-fluid" alt="ECG Analysis">
-                    {% else %}
-                        <p>ECG visualization not available</p>
-                    {% endif %}
+                <div class="card-body text-center">
+                    <div class="chart-container" style="position: relative; height: 350px; width: 100%; max-width: 500px; margin: 0 auto;">
+                        <img src="data:image/png;base64,{{ ecg_visualization }}" 
+                             class="img-fluid rounded shadow" 
+                             alt="ECG Analysis"
+                             style="max-height: 350px; max-width: 500px; width: auto; height: auto; object-fit: contain;">
+                    </div>
+                    <p class="mt-3 text-muted">
+                        <i class="bi bi-info-circle me-2"></i>
+                        ECG analysis from your uploaded medical report.
+                    </p>
+                </div>
+            </div>
+        {% else %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4><i class="bi bi-heart-pulse me-2"></i>ECG Analysis</h4>
+                </div>
+                <div class="card-body text-center">
+                    <div class="p-4" style="background: rgba(255, 255, 255, 0.05); border-radius: 0.75rem; border: 1px solid rgba(255, 255, 255, 0.1);">
+                        <i class="bi bi-heart-pulse text-muted" style="font-size: 3rem;"></i>
+                        <p class="text-muted mt-3 mb-0">ECG visualization not available</p>
+                        <small class="text-muted">No ECG data was found in your uploaded report.</small>
+                    </div>
                 </div>
             </div>
         {% endif %}

@@ -327,20 +327,14 @@
                                 {% endif %}
                             </div>
                         </div>
-                        <div class="text-center mt-4">
+                        <div class="text-center mt-4 mb-4">
                             {% if is_admin_view %}
-                            <a href="{{ url_for('admin_download_report', session_id=session_id) }}" class="btn btn-primary">
-                                <i class="bi bi-download"></i> Download Full Report
-                            </a>
-                            <a href="{{ url_for('admin_all_reports') }}" class="btn btn-secondary ms-2">
-                                <i class="bi bi-arrow-left"></i> Back to Reports
+                            <a href="{{ url_for('admin_all_reports') }}" class="btn btn-primary">
+                                <i class="bi bi-arrow-left me-2"></i>Back to Reports
                             </a>
                             {% else %}
-                            <a href="{{ url_for('download_report', session_id=session_id) }}" class="btn btn-primary">
-                                <i class="bi bi-download"></i> Download Full Report
-                            </a>
-                            <a href="{{ url_for('index') }}" class="btn btn-secondary ms-2">
-                                <i class="bi bi-house"></i> Back to Home
+                            <a href="{{ url_for('index') }}" class="btn btn-primary">
+                                <i class="bi bi-house me-2"></i>Back to Home
                             </a>
                             {% endif %}
                         </div>
@@ -435,92 +429,286 @@
                         <!-- Key Risk Factors Analysis Section -->
                         <div class="card">
                             <div class="card-header">
-                                <h4>Key Risk Factors Analysis</h4>
+                                <h4><i class="bi bi-graph-up me-2"></i>Key Risk Factors Analysis</h4>
                             </div>
                             <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <h5 class="text-primary">Top Risk Factors</h5>
-                                        <ul class="list-group">
-                                            {% for feature, data in explanation.get('key_factors', {}).items() %}
-                                            <li class="list-group-item">
-                                                <div class="d-flex justify-content-between align-items-center">
-                                                    <strong>{{ feature|replace('_', ' ')|title }}</strong>
-                                                    <span class="badge {% if data['risk_level'] == 'high' %}bg-danger{% elif data['risk_level'] == 'medium' %}bg-warning{% else %}bg-success{% endif %}">
-                                                        {{ data['risk_level']|title }}
-                                                    </span>
-                                                </div>
-                                                <p class="mb-0 mt-2">{{ data.description }}</p>
-                                            </li>
-                                    {% endfor %}
-                                </ul>
+                                <!-- Your Key Risk Factors - Full Width -->
+                                <div class="mb-5">
+                                    <h5 class="text-primary mb-4 text-center">
+                                        <i class="bi bi-bar-chart me-2"></i>Your Key Risk Factors
+                                    </h5>
+                                    {% if explanation.key_risk_factors_img %}
+                                    <div class="text-center">
+                                        <div class="chart-container" style="position: relative; height: 450px; width: 100%; max-width: 900px; margin: 0 auto;">
+                                            <img src="data:image/png;base64,{{ explanation.key_risk_factors_img }}" 
+                                                 alt="Key Risk Factors" 
+                                                 class="img-fluid rounded shadow" 
+                                                 style="max-height: 450px; max-width: 900px; width: auto; height: auto; object-fit: contain;">
+                                        </div>
                                     </div>
-                                    <div class="col-md-6">
-                                        {% if explanation.feature_importance_img %}
-                                        <div class="text-center">
-                                            <h5 class="text-primary">Feature Importance Visualization</h5>
-                                            <img src="data:image/png;base64,{{ explanation.feature_importance_img }}" alt="Feature Importance" class="img-fluid">
+                                    {% else %}
+                                    <div class="text-center p-4" style="background: rgba(255, 255, 255, 0.05); border-radius: 0.75rem; border: 1px solid rgba(255, 255, 255, 0.1); min-height: 350px; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                                        <i class="bi bi-bar-chart text-muted" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                                        <p class="text-muted mb-2">Risk factors visualization not available</p>
+                                        <small class="text-muted">This chart would show your key risk factors with their individual scores.</small>
+                                    </div>
+                                    {% endif %}
+                                    
+                                    <!-- Risk Factors List 
+                                    <div class="risk-factors-list mt-4">
+                                        {% for feature, data in explanation.get('key_factors', {}).items() %}
+                                        <div class="risk-factor-item mb-3 p-3 border rounded" style="background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.1) !important;">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <strong class="text-light">{{ feature|replace('_', ' ')|title }}</strong>
+                                                <span class="badge {% if data['risk_level'] == 'high' %}bg-danger{% elif data['risk_level'] == 'medium' %}bg-warning{% else %}bg-success{% endif %}">
+                                                    {{ data['risk_level']|title }}
+                                                </span>
+                                            </div>
+                                            <p class="mb-0 mt-2 small text-muted">{{ data.description }}</p>
+                                        </div>
+                                        {% endfor %}
+                                    </div>-->
+                                </div>
+
+                                <!-- Feature Importance - Full Width -->
+                                <div class="mb-4">
+                                    <h5 class="text-primary mb-4 text-center">
+                                        <i class="bi bi-pie-chart me-2"></i>Feature Importance Analysis
+                                    </h5>
+                                    {% if explanation.feature_importance_img %}
+                                    <div class="text-center">
+                                        <div class="chart-container" style="position: relative; height: 450px; width: 100%; max-width: 800px; margin: 0 auto;">
+                                            <img src="data:image/png;base64,{{ explanation.feature_importance_img }}" 
+                                                 alt="Feature Importance" 
+                                                 class="img-fluid rounded shadow" 
+                                                 style="max-height: 450px; max-width: 800px; width: auto; height: auto; object-fit: contain;">
+                                        </div>
+                                    </div>
+                                    <div class="mt-3 text-center">
+                                        <p class="text-muted mb-0">
+                                            <i class="bi bi-info-circle me-2"></i>
+                                            This chart shows the relative importance of each health factor in the prediction model.
+                                        </p>
+                                    </div>
+                                    {% else %}
+                                    <div class="text-center p-4" style="background: rgba(255, 255, 255, 0.05); border-radius: 0.75rem; border: 1px solid rgba(255, 255, 255, 0.1); min-height: 300px; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                                        <i class="bi bi-pie-chart text-muted" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                                        <p class="text-muted mb-2">Feature importance visualization not available</p>
+                                        <small class="text-muted">This chart would show the relative importance of each health factor in the prediction model.</small>
+                                        
+                                        <!-- Fallback: Show top features in a simple list -->
+                                        {% if explanation.get('key_factors') %}
+                                        <div class="mt-3" style="text-align: left; width: 100%;">
+                                            <h6 class="text-light mb-2">Top Risk Factors:</h6>
+                                            <div class="feature-list">
+                                                {% for feature, data in explanation.get('key_factors', {}).items() %}
+                                                <div class="feature-item mb-2 p-2" style="background: rgba(255, 255, 255, 0.03); border-radius: 0.5rem; border: 1px solid rgba(255, 255, 255, 0.1);">
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <span class="text-light small">{{ feature|replace('_', ' ')|title }}</span>
+                                                        <span class="badge {% if data['risk_level'] == 'high' %}bg-danger{% elif data['risk_level'] == 'medium' %}bg-warning{% else %}bg-success{% endif %} small">
+                                                            {{ data['risk_level']|title }}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                {% endfor %}
+                                            </div>
                                         </div>
                                         {% endif %}
                                     </div>
+                                    {% endif %}
                                 </div>
-                                <div class="chart-explanation mt-3" style="background: yellow; color: black; font-size: 2rem; font-weight: bold; padding: 1rem; border-radius: 1rem;">
-                                    TEST EXPLANATION HERE: Key Risk Factors
-                                    <br>
-                                    <span style="font-size: 1.2rem; color: black;">{{ explanation.get('key_risk_factors_explanation', 'These are the most significant factors contributing to your heart disease risk. Higher scores indicate greater influence on your risk profile. Review each factor to understand where your main risks lie.') }}</span>
+
+                                <!-- Explanation Section -->
+                                <div class="chart-explanation mt-4" style="background: linear-gradient(135deg, rgba(255, 193, 7, 0.1), rgba(255, 193, 7, 0.05)); color: #ffc107; font-size: 1rem; font-weight: 500; padding: 1.5rem; border-radius: 0.75rem; border: 1px solid rgba(255, 193, 7, 0.2);">
+                                    <strong><i class="bi bi-info-circle me-2"></i>Understanding Your Risk Factors:</strong> These are the most significant factors contributing to your heart disease risk. Higher scores indicate greater influence on your risk profile. Review each factor to understand where your main risks lie and discuss them with your healthcare provider.
                                 </div>
                             </div>
                         </div>
                         <!-- Feature Impact Analysis Section -->
                         <div class="card">
                             <div class="card-header">
-                                <h4>Feature Impact Analysis</h4>
+                                <h4><i class="bi bi-activity me-2"></i>Feature Impact Analysis</h4>
                             </div>
                             <div class="card-body">
                                 <div class="text-center">
                                     {% if explanation.risk_factor_img %}
-                                    <img src="data:image/png;base64,{{ explanation.risk_factor_img }}" alt="Feature Impact Analysis" class="img-fluid">
+                                    <div class="chart-container" style="position: relative; height: 450px; width: 100%; max-width: 600px; margin: 0 auto;">
+                                        <img src="data:image/png;base64,{{ explanation.risk_factor_img }}" 
+                                             alt="Feature Impact Analysis" 
+                                             class="img-fluid rounded shadow" 
+                                             style="max-height: 450px; max-width: 600px; width: auto; height: auto; object-fit: contain;">
+                                    </div>
+                                    {% else %}
+                                    <div class="text-center p-5" style="background: rgba(255, 255, 255, 0.05); border-radius: 0.75rem; border: 1px solid rgba(255, 255, 255, 0.1); min-height: 400px; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                                        <i class="bi bi-activity text-muted" style="font-size: 4rem; margin-bottom: 1rem;"></i>
+                                        <p class="text-muted mb-2">Feature impact analysis visualization not available</p>
+                                        <small class="text-muted">This chart would show how your health parameters impact your overall risk assessment.</small>
+                                    </div>
                                     {% endif %}
                                 </div>
-                                <div class="chart-explanation mt-3" style="background: yellow; color: black; font-size: 2rem; font-weight: bold; padding: 1rem; border-radius: 1rem;">
-                                    TEST EXPLANATION HERE: Feature Impact Analysis
-                                    <br>
-                                    <span style="font-size: 1.2rem; color: black;">{{ explanation.get('feature_impact_explanation', 'This chart shows how your health parameters impact your overall risk assessment based on their importance and your specific values. Features with higher impact scores are more influential in your risk prediction.') }}</span>
+                                <div class="chart-explanation mt-4" style="background: linear-gradient(135deg, rgba(13, 202, 240, 0.1), rgba(13, 202, 240, 0.05)); color: #0dcaf0; font-size: 1rem; font-weight: 500; padding: 1.5rem; border-radius: 0.75rem; border: 1px solid rgba(13, 202, 240, 0.2);">
+                                    <strong><i class="bi bi-info-circle me-2"></i>Feature Impact Analysis:</strong> This chart shows how your health parameters impact your overall risk assessment based on their importance and your specific values. Features with higher impact scores are more influential in your risk prediction. Understanding these impacts can help you focus on the most critical health factors.
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Key Health Parameters Section - 3+2 Grid Layout -->
+                        <div class="card">
+                            <div class="card-header">
+                                <h4><i class="bi bi-clipboard-data me-2"></i>Key Health Parameters</h4>
+                            </div>
+                            <div class="card-body">
+                                <p class="text-center text-muted mb-4">Your key health parameters and their clinical interpretations:</p>
+                                
+                                <!-- First Row - 3 Parameters -->
+                                <div class="row mb-3">
+                                    <div class="col-md-4">
+                                        <div class="parameter-card" style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05)); border-radius: 0.75rem; padding: 1.5rem; border: 1px solid rgba(255, 255, 255, 0.2); height: 120px;">
+                                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                                <h6 class="text-light mb-0">Ca</h6>
+                                                <div class="toggle-switch" style="width: 40px; height: 20px; background: #28a745; border-radius: 20px; position: relative;">
+                                                    <div style="width: 16px; height: 16px; background: white; border-radius: 50%; position: absolute; top: 2px; right: 2px;"></div>
+                                                </div>
+                                            </div>
+                                            <p class="text-muted small mb-0">Number of major vessels colored by fluoroscopy</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="parameter-card" style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05)); border-radius: 0.75rem; padding: 1.5rem; border: 1px solid rgba(255, 255, 255, 0.2); height: 120px;">
+                                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                                <h6 class="text-light mb-0">Thal</h6>
+                                                <div class="toggle-switch" style="width: 40px; height: 20px; background: #28a745; border-radius: 20px; position: relative;">
+                                                    <div style="width: 16px; height: 16px; background: white; border-radius: 50%; position: absolute; top: 2px; right: 2px;"></div>
+                                                </div>
+                                            </div>
+                                            <p class="text-muted small mb-0">Thalassemia (3 = Normal, 6 = Fixed Defect, 7 = Reversible Defect)</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="parameter-card" style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05)); border-radius: 0.75rem; padding: 1.5rem; border: 1px solid rgba(255, 255, 255, 0.2); height: 120px;">
+                                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                                <h6 class="text-light mb-0">Cp</h6>
+                                                <div class="toggle-switch" style="width: 40px; height: 20px; background: #28a745; border-radius: 20px; position: relative;">
+                                                    <div style="width: 16px; height: 16px; background: white; border-radius: 50%; position: absolute; top: 2px; right: 2px;"></div>
+                                                </div>
+                                            </div>
+                                            <p class="text-muted small mb-0">Chest pain type (0 = Typical Angina, 1 = Atypical Angina, 2 = Non-anginal Pain, 3 = Asymptomatic)</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Second Row - 2 Parameters -->
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="parameter-card" style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05)); border-radius: 0.75rem; padding: 1.5rem; border: 1px solid rgba(255, 255, 255, 0.2); height: 120px;">
+                                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                                <h6 class="text-light mb-0">Thalach</h6>
+                                                <div class="toggle-switch" style="width: 40px; height: 20px; background: #28a745; border-radius: 20px; position: relative;">
+                                                    <div style="width: 16px; height: 16px; background: white; border-radius: 50%; position: absolute; top: 2px; right: 2px;"></div>
+                                                </div>
+                                            </div>
+                                            <p class="text-muted small mb-0">Maximum heart rate achieved</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="parameter-card" style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05)); border-radius: 0.75rem; padding: 1.5rem; border: 1px solid rgba(255, 255, 255, 0.2); height: 120px;">
+                                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                                <h6 class="text-light mb-0">Oldpeak</h6>
+                                                <div class="toggle-switch" style="width: 40px; height: 20px; background: #28a745; border-radius: 20px; position: relative;">
+                                                    <div style="width: 16px; height: 16px; background: white; border-radius: 50%; position: absolute; top: 2px; right: 2px;"></div>
+                                                </div>
+                                            </div>
+                                            <p class="text-muted small mb-0">ST depression induced by exercise relative to rest</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="chart-explanation mt-3" style="background: linear-gradient(135deg, rgba(33, 150, 243, 0.1), rgba(33, 150, 243, 0.05)); color: #2196f3; font-size: 0.9rem; font-weight: 500; padding: 1rem; border-radius: 0.5rem; border: 1px solid rgba(33, 150, 243, 0.2);">
+                                    <strong><i class="bi bi-info-circle me-2"></i>Parameter Status:</strong> These parameters represent key clinical measurements used in your heart disease risk assessment. The toggle indicators show the relative significance of each parameter in your individual case.
                                 </div>
                             </div>
                         </div>
                         <!-- Comparison with Similar Cases Section -->
                         <div class="card">
                             <div class="card-header">
-                                <h4>Comparison with Similar Cases</h4>
+                                <h4><i class="bi bi-people me-2"></i>Comparison with Similar Cases</h4>
                             </div>
                             <div class="card-body">
-                                <div class="row">
-                                    {% for feature in ['age', 'sex', 'cp', 'trestbps', 'chol'] %}
-                                    {% if explanation.boxplots and explanation.boxplots[feature] %}
-                                    <div class="col-md-12 mb-4">
-                                        <div class="boxplot-card">
-                                            <div class="boxplot-title">Comparison for {{ feature|replace('_', ' ')|title }}</div>
-                                            <img src="data:image/png;base64,{{ explanation.boxplots[feature] }}" alt="Boxplot for {{ feature }}" class="img-fluid" />
+                                <p class="text-center text-muted mb-3">See how your health metrics compare to other patients with similar profiles:</p>
+                                
+                                {% for feature in ['age', 'sex', 'cp', 'trestbps', 'chol'] %}
+                                {% if explanation.boxplots and explanation.boxplots[feature] %}
+                                <div class="mb-3">
+                                    <div class="boxplot-card p-3" style="background: rgba(255, 255, 255, 0.05); border-radius: 0.75rem; border: 1px solid rgba(255, 255, 255, 0.1); width: 100%;">
+                                        <div class="boxplot-title mb-2 text-center" style="color: #f3f6fa; font-weight: 600; font-size: 1.1rem;">
+                                            <i class="bi bi-graph-up me-2"></i>{{ feature|replace('_', ' ')|title }}
+                                        </div>
+                                        <div class="chart-container text-center" style="position: relative; height: 280px; width: 100%; margin: 0 auto;">
+                                            <img src="data:image/png;base64,{{ explanation.boxplots[feature] }}" 
+                                                 alt="Boxplot for {{ feature }}" 
+                                                 class="img-fluid rounded shadow" 
+                                                 style="max-height: 280px; width: 100%; height: auto; object-fit: contain;" />
                                         </div>
                                     </div>
-                                    {% endif %}
-                                    {% endfor %}
                                 </div>
-                                <div class="chart-explanation mt-3" style="background: yellow; color: black; font-size: 2rem; font-weight: bold; padding: 1rem; border-radius: 1rem;">
-                                    TEST EXPLANATION HERE: Comparison with Similar Cases
-                                    <br>
-                                    <span style="font-size: 1.2rem; color: black;">{{ explanation.get('comparison_explanation', 'This section compares your health metrics to those of similar patients. If your values are outside the typical range, it may indicate higher or lower risk compared to your peers.') }}</span>
+                                {% endif %}
+                                {% endfor %}
+                                
+                                <div class="chart-explanation mt-3" style="background: linear-gradient(135deg, rgba(108, 117, 125, 0.1), rgba(108, 117, 125, 0.05)); color: #6c757d; font-size: 1rem; font-weight: 500; padding: 1rem; border-radius: 0.5rem; border: 1px solid rgba(108, 117, 125, 0.2);">
+                                    <strong><i class="bi bi-info-circle me-2"></i>Comparative Analysis:</strong> This section compares your health metrics to those of similar patients in our database. If your values are outside the typical range, it may indicate higher or lower risk compared to your peers.
                                 </div>
                             </div>
                         </div>
                         <!-- Explanation/Summary Section -->
                         <div class="card">
                             <div class="card-header">
-                                <h4>Explanation & Next Steps</h4>
+                                <h4><i class="bi bi-clipboard-check me-2"></i>Assessment Summary</h4>
                             </div>
                             <div class="card-body">
-                                <p>{{ explanation['explanation_text'] or explanation['risk_description'] }}</p>
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="summary-card text-center p-3" style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05)); border-radius: 0.75rem; border: 1px solid rgba(255, 255, 255, 0.2);">
+                                            <h6 class="text-primary mb-2">Risk Level</h6>
+                                            <p class="text-light mb-0 fw-bold">{{ explanation.get('risk_level', 'Unknown') }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="summary-card text-center p-3" style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05)); border-radius: 0.75rem; border: 1px solid rgba(255, 255, 255, 0.2);">
+                                            <h6 class="text-primary mb-2">Probability</h6>
+                                            <p class="text-light mb-0 fw-bold">{{ "%.1f"|format((explanation.get('probability', 0) * 100)) }}%</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="summary-card text-center p-3" style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05)); border-radius: 0.75rem; border: 1px solid rgba(255, 255, 255, 0.2);">
+                                            <h6 class="text-primary mb-2">Risk Type</h6>
+                                            <p class="text-light mb-0 fw-bold">{{ explanation.get('risk_type', 'Moderate') }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="summary-card text-center p-3" style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05)); border-radius: 0.75rem; border: 1px solid rgba(255, 255, 255, 0.2);">
+                                            <h6 class="text-primary mb-2">Models Used</h6>
+                                            <p class="text-light mb-0 fw-bold">3 ML Models</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="detailed-analysis mt-4" style="background: rgba(255, 255, 255, 0.05); border-radius: 0.75rem; padding: 1.5rem; border: 1px solid rgba(255, 255, 255, 0.1);">
+                                    <h6 class="text-light mb-3"><i class="bi bi-file-text me-2"></i>Detailed Analysis</h6>
+                                    <div class="analysis-text" style="color: #bdbddd; line-height: 1.6;">
+                                        {% set detailed_text = explanation.get('explanation_text') or explanation.get('risk_description') %}
+                                        {% if detailed_text %}
+                                            {% set sentences = detailed_text.split('.') %}
+                                            {% for sentence in sentences[:3] %}
+                                                {% if sentence.strip() %}
+                                                    <p class="mb-2">• {{ sentence.strip() }}.</p>
+                                                {% endif %}
+                                            {% endfor %}
+                                        {% else %}
+                                            <p class="mb-2">• Based on your health parameters, we've conducted a comprehensive analysis using three different machine learning models.</p>
+                                            <p class="mb-2">• The assessment considers multiple factors including age, chest pain type, blood pressure, cholesterol levels, and cardiac test results.</p>
+                                            <p class="mb-0">• Our recommendation is to consult with healthcare professionals for personalized medical advice.</p>
+                                        {% endif %}
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <!-- Recommendations Section -->
@@ -566,38 +754,18 @@
                                 {% endif %}
                             </div>
                         </div>
-                        <div class="text-center mt-4">
+                        <div class="text-center mt-4 mb-4">
                             {% if is_admin_view %}
-                            <a href="{{ url_for('admin_download_report', session_id=session_id) }}" class="btn btn-primary">
-                                <i class="bi bi-download"></i> Download Full Report
-                            </a>
-                            <a href="{{ url_for('admin_all_reports') }}" class="btn btn-secondary ms-2">
-                                <i class="bi bi-arrow-left"></i> Back to Reports
+                            <a href="{{ url_for('admin_all_reports') }}" class="btn btn-primary">
+                                <i class="bi bi-arrow-left me-2"></i>Back to Reports
                             </a>
                             {% else %}
-                            <a href="{{ url_for('download_report', session_id=session_id) }}" class="btn btn-primary">
-                                <i class="bi bi-download"></i> Download Full Report
-                            </a>
-                            <a href="{{ url_for('index') }}" class="btn btn-secondary ms-2">
-                                <i class="bi bi-house"></i> Back to Home
+                            <a href="{{ url_for('index') }}" class="btn btn-primary">
+                                <i class="bi bi-house me-2"></i>Back to Home
                             </a>
                             {% endif %}
                         </div>
                     {% endif %}
-
-                    <pre>{{ explanation.boxplots | safe }}</pre>
-
-                    {% if explanation.boxplots %}
-                    print("DEBUG: boxplots keys:", list(explanation.boxplots.keys()))
-                    {% endif %}
-
-                    {% if explanation.get('key_factors', {}) %}
-                    print("DEBUG: key_factors keys:", list(explanation.get('key_factors', {}).keys()))
-                    {% endif %}
-
-                    {% set knn_risk = explanation.get('model_insights', {}).get('knn', {}).get('risk_level', 'Unknown') %}
-                    {% set rf_risk = explanation.get('model_insights', {}).get('random_forest', {}).get('risk_level', 'Unknown') %}
-                    {% set xgb_risk = explanation.get('model_insights', {}).get('xgboost', {}).get('risk_level', 'Unknown') %}
 
                 </div>
             </div>

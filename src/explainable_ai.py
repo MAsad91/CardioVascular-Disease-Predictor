@@ -26,6 +26,8 @@ def get_feature_importance(model_dir='models', model_type=None):
     - importance_df: DataFrame with feature importances
     """
     try:
+        print(f"DEBUG: get_feature_importance called with model_dir={model_dir}, model_type={model_type}")
+        
         # Determine which model to use
         if model_type is None:
             # Default to Random Forest for better feature importance
@@ -42,32 +44,50 @@ def get_feature_importance(model_dir='models', model_type=None):
                 # Default to Random Forest if model type is not recognized
                 model_path = os.path.join(model_dir, 'random_forest_model.pkl')
         
+        print(f"DEBUG: Using model path: {model_path}")
+        print(f"DEBUG: Model file exists: {os.path.exists(model_path)}")
+        
         # Load the model
         model = joblib.load(model_path)
+        print(f"DEBUG: Model loaded successfully, type: {type(model)}")
         
         # Load the feature names
         feature_names_path = os.path.join(model_dir, 'feature_names.pkl')
+        print(f"DEBUG: Feature names path: {feature_names_path}")
+        print(f"DEBUG: Feature names file exists: {os.path.exists(feature_names_path)}")
+        
         feature_names = joblib.load(feature_names_path)
+        print(f"DEBUG: Feature names loaded: {feature_names}")
         
         # Load training data
         data_path = os.path.join('data', 'heart_disease.csv')
+        print(f"DEBUG: Data path: {data_path}")
+        print(f"DEBUG: Data file exists: {os.path.exists(data_path)}")
+        
         df = pd.read_csv(data_path)
+        print(f"DEBUG: Data loaded, shape: {df.shape}")
         
         # Prepare data
         X_train = df.drop('target', axis=1).values
         y_train = df['target'].values
+        print(f"DEBUG: X_train shape: {X_train.shape}, y_train shape: {y_train.shape}")
         
         # If the model has built-in feature importance (RF or XGBoost), use it
         if hasattr(model, 'feature_importances_'):
+            print(f"DEBUG: Using built-in feature importance")
             importances = model.feature_importances_
             std = np.zeros_like(importances)  # No std for built-in importance
         else:
+            print(f"DEBUG: Using permutation importance")
             # For KNN or if built-in importance isn't available, use permutation importance
             result = permutation_importance(
                 model, X_train, y_train, n_repeats=10, random_state=42, n_jobs=-1
             )
             importances = result.importances_mean
             std = result.importances_std
+        
+        print(f"DEBUG: Importances calculated, length: {len(importances)}")
+        print(f"DEBUG: Importances: {importances}")
         
         # Create a DataFrame with the feature importances
         importance_df = pd.DataFrame({
@@ -76,26 +96,35 @@ def get_feature_importance(model_dir='models', model_type=None):
             'StdDev': std
         })
         
+        print(f"DEBUG: Importance DataFrame created, shape: {importance_df.shape}")
+        print(f"DEBUG: Importance DataFrame head:\n{importance_df.head()}")
+        
         # Sort by importance
         importance_df = importance_df.sort_values('Importance', ascending=False)
         
         # Normalize importance scores to sum to 1
         importance_df['Importance'] = importance_df['Importance'] / importance_df['Importance'].sum()
         
+        print(f"DEBUG: Final importance DataFrame:\n{importance_df}")
+        
         return importance_df
         
     except Exception as e:
         print(f"Error in get_feature_importance: {str(e)}")
+        import traceback
+        traceback.print_exc()
         # Return a default importance DataFrame if there's an error
         default_features = [
             'age', 'sex', 'cp', 'trestbps', 'chol', 'fbs', 'restecg',
             'thalach', 'exang', 'oldpeak', 'slope', 'ca', 'thal'
         ]
-        return pd.DataFrame({
+        default_df = pd.DataFrame({
             'Feature': default_features,
             'Importance': [1/len(default_features)] * len(default_features),
             'StdDev': [0] * len(default_features)
         })
+        print(f"DEBUG: Returning default importance DataFrame:\n{default_df}")
+        return default_df
 
 def get_neighbors_data(input_data, model_dir='models'):
     """
@@ -208,46 +237,71 @@ def create_feature_importance_plot(importance_df, top_n=10):
     Returns:
     - fig: Matplotlib figure
     """
-    # Clear any existing plots
-    plt.clf()
-    
-    # Ensure importance_df is a DataFrame
-    if not isinstance(importance_df, pd.DataFrame):
-        print(f"Warning: importance_df is not a DataFrame, got {type(importance_df)}. Cannot create feature importance plot.")
+    try:
+        print(f"DEBUG: create_feature_importance_plot called with importance_df type: {type(importance_df)}")
+        
+        # Clear any existing plots
+        plt.clf()
+        
+        # Ensure importance_df is a DataFrame
+        if not isinstance(importance_df, pd.DataFrame):
+            print(f"Warning: importance_df is not a DataFrame, got {type(importance_df)}. Cannot create feature importance plot.")
+            return None
+        
+        print(f"DEBUG: importance_df shape: {importance_df.shape}")
+        print(f"DEBUG: importance_df columns: {importance_df.columns.tolist()}")
+        print(f"DEBUG: importance_df head:\n{importance_df.head()}")
+        
+        # Ensure required columns exist
+        required_columns = ['Feature', 'Importance']
+        if not all(col in importance_df.columns for col in required_columns):
+            print(f"Warning: importance_df missing required columns. Found: {importance_df.columns}. Cannot create feature importance plot.")
+            return None
+        
+        # Get the top N features
+        top_features = importance_df.head(top_n).copy()
+        
+        if top_features.empty:
+            print("Warning: No features found in importance_df. Cannot create feature importance plot.")
+            return None
+        
+        print(f"DEBUG: top_features shape: {top_features.shape}")
+        print(f"DEBUG: top_features:\n{top_features}")
+        
+        # Sort by importance in descending order
+        top_features = top_features.sort_values('Importance', ascending=True)
+        
+        # Create the plot using matplotlib directly instead of seaborn for better compatibility
+        fig, ax = plt.subplots(figsize=(8, 6))
+        
+        # Create horizontal bar plot
+        y_pos = range(len(top_features))
+        bars = ax.barh(y_pos, top_features['Importance'], color='skyblue', alpha=0.8, height=0.6)
+        
+        # Add value labels on the bars
+        for i, (bar, importance) in enumerate(zip(bars, top_features['Importance'])):
+            ax.text(importance + 0.01, i, f'{importance:.3f}', va='center', fontweight='bold', fontsize=9)
+        
+        # Customize the plot
+        ax.set_yticks(y_pos)
+        ax.set_yticklabels(top_features['Feature'], fontsize=10)
+        ax.set_xlabel('Importance Score', fontsize=12)
+        ax.set_title('Feature Importance Analysis', fontsize=14, fontweight='bold', pad=20)
+        
+        # Add grid for better readability
+        ax.grid(axis='x', linestyle='--', alpha=0.7)
+        
+        # Adjust layout to prevent stretching
+        plt.tight_layout(pad=1.5)
+        
+        print(f"DEBUG: Feature importance plot created successfully")
+        return fig
+        
+    except Exception as e:
+        print(f"Error in create_feature_importance_plot: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return None
-    
-    # Ensure required columns exist
-    required_columns = ['Feature', 'Importance']
-    if not all(col in importance_df.columns for col in required_columns):
-        print(f"Warning: importance_df missing required columns. Found: {importance_df.columns}. Cannot create feature importance plot.")
-        return None
-    
-    # Get the top N features
-    top_features = importance_df.head(top_n).copy()
-    
-    # Sort by importance in descending order
-    top_features = top_features.sort_values('Importance', ascending=True)
-    
-    # Create the plot
-    fig = plt.figure(figsize=(12, 8))
-    ax = sns.barplot(x='Importance', y='Feature', data=top_features, palette='viridis', hue=None, legend=False)
-    
-    # Add value labels on the bars
-    for i, v in enumerate(top_features['Importance']):
-        ax.text(v, i, f'{v:.3f}', va='center', fontweight='bold')
-    
-    # Customize the plot
-    plt.title('Key Risk Factors Analysis', fontsize=16, pad=20)
-    plt.xlabel('Importance Score', fontsize=12)
-    plt.ylabel('Risk Factors', fontsize=12)
-    
-    # Removed grid for consistency with previous style
-    # plt.grid(True, axis='x', linestyle='--', alpha=0.7)
-    
-    # Adjust layout
-    plt.tight_layout()
-    
-    return fig
 
 def create_feature_comparison_plot(neighbors_df, input_data, top_n=5):
     """
@@ -403,7 +457,7 @@ def create_key_risk_factors_chart(input_data, feature_importance):
             return None
         
         # Create the horizontal bar chart
-        fig, ax = plt.subplots(figsize=(10, 6))
+        fig, ax = plt.subplots(figsize=(8, 6))
         
         # Create bars with LIGHT BLUE color
         bars = ax.barh(range(len(feature_labels)), risk_scores, color='#87CEEB', alpha=0.8, height=0.6)
@@ -425,7 +479,7 @@ def create_key_risk_factors_chart(input_data, feature_importance):
         # Add a vertical line at 50 for reference
         ax.axvline(x=50, color='red', linestyle='--', alpha=0.5, linewidth=1)
         
-        plt.tight_layout()
+        plt.tight_layout(pad=1.5)
         return fig
         
     except Exception as e:
@@ -995,19 +1049,136 @@ def generate_explanation(input_data, prediction, neighbors_data, feature_importa
         rf_explanation = generate_random_forest_explanation(input_data, prediction, feature_importance)
         xgb_explanation = generate_xgboost_explanation(input_data, prediction, feature_importance)
         
-        # Create visualizations
-        feature_importance_plot = create_feature_importance_plot(feature_importance)
-        feature_comparison_plot = create_feature_comparison_plot(neighbors_data, input_data)
-        risk_factor_plot = create_patient_risk_factor_plot(input_data, feature_importance)
-        key_risk_factors_chart = create_key_risk_factors_chart(input_data, feature_importance)
-        model_consensus_chart = create_model_consensus_chart(individual_predictions) if individual_predictions else None
+        # Create visualizations with better error handling
+        print("DEBUG: Creating visualizations...")
+        print(f"DEBUG: feature_importance type: {type(feature_importance)}")
+        if feature_importance is not None:
+            print(f"DEBUG: feature_importance shape: {feature_importance.shape if hasattr(feature_importance, 'shape') else 'No shape'}")
+            print(f"DEBUG: feature_importance columns: {feature_importance.columns if hasattr(feature_importance, 'columns') else 'No columns'}")
+            print(f"DEBUG: feature_importance head: {feature_importance.head() if hasattr(feature_importance, 'head') else 'No head method'}")
+        else:
+            print("DEBUG: feature_importance is None")
         
-        # Convert plots to base64
-        feature_importance_img = convert_plot_to_base64(feature_importance_plot)
-        feature_comparison_img = convert_plot_to_base64(feature_comparison_plot)
-        risk_factor_img = convert_plot_to_base64(risk_factor_plot)
-        key_risk_factors_img = convert_plot_to_base64(key_risk_factors_chart)
-        model_consensus_img = convert_plot_to_base64(model_consensus_chart) if model_consensus_chart else None
+        feature_importance_plot = None
+        feature_comparison_plot = None
+        risk_factor_plot = None
+        key_risk_factors_chart = None
+        model_consensus_chart = None
+        
+        try:
+            feature_importance_plot = create_feature_importance_plot(feature_importance)
+            print(f"DEBUG: feature_importance_plot created: {feature_importance_plot is not None}")
+        except Exception as e:
+            print(f"ERROR creating feature_importance_plot: {str(e)}")
+            feature_importance_plot = None
+            
+        # Fallback: Create a simple feature importance plot if the main one failed
+        if feature_importance_plot is None and feature_importance is not None:
+            try:
+                print("DEBUG: Attempting to create fallback feature importance plot...")
+                # Create a simple bar chart using matplotlib
+                fig, ax = plt.subplots(figsize=(8, 5))
+                
+                # Get top 5 features
+                if isinstance(feature_importance, pd.DataFrame) and not feature_importance.empty:
+                    top_features = feature_importance.head(5)
+                    features = top_features['Feature'].tolist()
+                    importances = top_features['Importance'].tolist()
+                    
+                    # Create simple horizontal bar chart
+                    y_pos = range(len(features))
+                    bars = ax.barh(y_pos, importances, color='lightblue', alpha=0.8)
+                    
+                    # Add labels
+                    ax.set_yticks(y_pos)
+                    ax.set_yticklabels(features, fontsize=10)
+                    ax.set_xlabel('Importance', fontsize=12)
+                    ax.set_title('Top Feature Importance', fontsize=14, fontweight='bold')
+                    
+                    # Add value labels
+                    for i, (bar, importance) in enumerate(zip(bars, importances)):
+                        ax.text(importance + 0.01, i, f'{importance:.3f}', va='center', fontweight='bold')
+                    
+                    plt.tight_layout()
+                    feature_importance_plot = fig
+                    print("DEBUG: Fallback feature importance plot created successfully")
+                else:
+                    print("DEBUG: feature_importance data is not suitable for fallback plot")
+            except Exception as e:
+                print(f"ERROR creating fallback feature_importance_plot: {str(e)}")
+                feature_importance_plot = None
+        
+        try:
+            feature_comparison_plot = create_feature_comparison_plot(neighbors_data, input_data)
+            print(f"DEBUG: feature_comparison_plot created: {feature_comparison_plot is not None}")
+        except Exception as e:
+            print(f"ERROR creating feature_comparison_plot: {str(e)}")
+            feature_comparison_plot = None
+        
+        try:
+            risk_factor_plot = create_patient_risk_factor_plot(input_data, feature_importance)
+            print(f"DEBUG: risk_factor_plot created: {risk_factor_plot is not None}")
+        except Exception as e:
+            print(f"ERROR creating risk_factor_plot: {str(e)}")
+            risk_factor_plot = None
+        
+        try:
+            key_risk_factors_chart = create_key_risk_factors_chart(input_data, feature_importance)
+            print(f"DEBUG: key_risk_factors_chart created: {key_risk_factors_chart is not None}")
+        except Exception as e:
+            print(f"ERROR creating key_risk_factors_chart: {str(e)}")
+            key_risk_factors_chart = None
+        
+        try:
+            model_consensus_chart = create_model_consensus_chart(individual_predictions) if individual_predictions else None
+            print(f"DEBUG: model_consensus_chart created: {model_consensus_chart is not None}")
+        except Exception as e:
+            print(f"ERROR creating model_consensus_chart: {str(e)}")
+            model_consensus_chart = None
+        
+        # Convert plots to base64 with error handling
+        print("DEBUG: Converting plots to base64...")
+        
+        feature_importance_img = None
+        feature_comparison_img = None
+        risk_factor_img = None
+        key_risk_factors_img = None
+        model_consensus_img = None
+        
+        try:
+            feature_importance_img = convert_plot_to_base64(feature_importance_plot)
+            print(f"DEBUG: feature_importance_img created: {feature_importance_img is not None}")
+        except Exception as e:
+            print(f"ERROR converting feature_importance_plot to base64: {str(e)}")
+            feature_importance_img = None
+        
+        try:
+            feature_comparison_img = convert_plot_to_base64(feature_comparison_plot)
+            print(f"DEBUG: feature_comparison_img created: {feature_comparison_img is not None}")
+        except Exception as e:
+            print(f"ERROR converting feature_comparison_plot to base64: {str(e)}")
+            feature_comparison_img = None
+        
+        try:
+            risk_factor_img = convert_plot_to_base64(risk_factor_plot)
+            print(f"DEBUG: risk_factor_img created: {risk_factor_img is not None}")
+        except Exception as e:
+            print(f"ERROR converting risk_factor_plot to base64: {str(e)}")
+            risk_factor_img = None
+        
+        try:
+            key_risk_factors_img = convert_plot_to_base64(key_risk_factors_chart)
+            print(f"DEBUG: key_risk_factors_img created: {key_risk_factors_img is not None}")
+        except Exception as e:
+            print(f"ERROR converting key_risk_factors_chart to base64: {str(e)}")
+            key_risk_factors_img = None
+        
+        try:
+            model_consensus_img = convert_plot_to_base64(model_consensus_chart) if model_consensus_chart else None
+            print(f"DEBUG: model_consensus_img created: {model_consensus_img is not None}")
+        except Exception as e:
+            print(f"ERROR converting model_consensus_chart to base64: {str(e)}")
+            model_consensus_img = None
         
         # --- Boxplots for Similar Cases ---
         boxplot_features = ['age', 'sex', 'cp', 'trestbps', 'chol']
@@ -1354,7 +1525,7 @@ def create_feature_impact_chart(input_data, feature_importance):
         impact_scores = scaled_scores
         
         # Create figure with explicit size and higher DPI for better quality
-        fig = plt.figure(figsize=(14, 9), dpi=120)
+        fig = plt.figure(figsize=(10, 7), dpi=120)
         ax = fig.add_subplot(111)
         
         # Create horizontal bar chart with gradient colors
@@ -1366,39 +1537,20 @@ def create_feature_impact_chart(input_data, feature_importance):
         
         # Customize the chart with enhanced styling
         ax.set_yticks(y_positions)
-        ax.set_yticklabels(feature_names, fontsize=12, fontweight='bold')
-        ax.set_xlabel('Feature Impact Score', fontsize=14, fontweight='bold')
-        ax.set_title('Feature Impact Analysis', fontsize=16, fontweight='bold', pad=25)
+        ax.set_yticklabels(feature_names, fontsize=11, fontweight='bold')
+        ax.set_xlabel('Impact Score', fontsize=12, fontweight='bold')
+        ax.set_title('Feature Impact Analysis', fontsize=14, fontweight='bold', pad=20)
         
-        # Set limits and enhanced styling
-        ax.set_xlim(0, 105)
-        ax.grid(axis='x', linestyle='--', alpha=0.6, linewidth=0.8)
-        ax.set_facecolor('#f8f9fa')
+        # Add value labels on bars
+        for i, (bar, score) in enumerate(zip(bars, impact_scores)):
+            ax.text(score + 1, i, f'{score:.0f}', va='center', ha='left', fontsize=10, fontweight='bold', color='white')
         
-        # Add value labels on bars with better positioning
-        for i, (bar, score, raw_score) in enumerate(zip(bars, impact_scores, raw_scores)):
-            # Show both scaled and raw scores
-            ax.text(score + 2, i, f'{score:.1f}', 
-                    va='center', fontsize=11, fontweight='bold')
-            # Add raw score in smaller text
-            ax.text(score/2, i, f'({raw_score:.1f})', 
-                    va='center', ha='center', fontsize=9, style='italic', alpha=0.7)
+        # Add grid and styling
+        ax.grid(axis='x', linestyle='--', alpha=0.3)
+        ax.set_xlim(0, max(impact_scores) * 1.1)
         
-        # Add reference zones with different colors
-        ax.axvspan(0, 30, alpha=0.1, color='green', label='Low Impact')
-        ax.axvspan(30, 70, alpha=0.1, color='orange', label='Medium Impact') 
-        ax.axvspan(70, 105, alpha=0.1, color='red', label='High Impact')
-        
-        # Add a subtle legend
-        ax.legend(loc='lower right', fontsize=10, framealpha=0.9)
-        
-        # Add border around the plot
-        for spine in ax.spines.values():
-            spine.set_linewidth(1.5)
-            spine.set_edgecolor('#333333')
-        
-        # Tight layout to ensure proper rendering
-        plt.tight_layout()
+        # Adjust layout to prevent stretching
+        plt.tight_layout(pad=1.5)
         
         return fig
         

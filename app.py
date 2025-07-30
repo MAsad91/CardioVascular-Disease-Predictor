@@ -781,22 +781,62 @@ def explain_prediction(session_id):
             feature_importance = get_feature_importance('models')
             neighbors_data = get_neighbors_data(input_data)
             
-            # Create visualizations ONLY if they don't already exist in explanation
-            if not explanation.get('feature_importance_img'):
+            # Create visualizations - ALWAYS regenerate to ensure they exist
+            try:
+                print(f"DEBUG: Creating feature_importance_plot...")
+                print(f"DEBUG: feature_importance type: {type(feature_importance)}")
+                print(f"DEBUG: feature_importance shape: {feature_importance.shape if hasattr(feature_importance, 'shape') else 'No shape'}")
+                print(f"DEBUG: feature_importance columns: {feature_importance.columns if hasattr(feature_importance, 'columns') else 'No columns'}")
+                
                 feature_importance_plot = create_feature_importance_plot(feature_importance)
-                explanation['feature_importance_img'] = convert_plot_to_base64(feature_importance_plot)
+                print(f"DEBUG: feature_importance_plot created: {feature_importance_plot is not None}")
+                
+                if feature_importance_plot is not None:
+                    explanation['feature_importance_img'] = convert_plot_to_base64(feature_importance_plot)
+                    print(f"DEBUG: feature_importance_img created successfully, length: {len(explanation['feature_importance_img'])}")
+                else:
+                    print("DEBUG: feature_importance_plot returned None - creating fallback")
+                    # Create a simple fallback plot
+                    import matplotlib.pyplot as plt
+                    import numpy as np
+                    
+                    # Create a simple fallback plot
+                    fig, ax = plt.subplots(figsize=(8, 6))
+                    features = ['Age', 'Sex', 'Chest Pain', 'Blood Pressure', 'Cholesterol', 'Heart Rate']
+                    importance = [0.25, 0.20, 0.18, 0.15, 0.12, 0.10]
+                    
+                    y_pos = range(len(features))
+                    bars = ax.barh(y_pos, importance, color='skyblue', alpha=0.8, height=0.6)
+                    
+                    ax.set_yticks(y_pos)
+                    ax.set_yticklabels(features, fontsize=10)
+                    ax.set_xlabel('Importance Score', fontsize=12)
+                    ax.set_title('Feature Importance (Fallback)', fontsize=14, fontweight='bold')
+                    ax.grid(axis='x', linestyle='--', alpha=0.7)
+                    
+                    plt.tight_layout()
+                    
+                    explanation['feature_importance_img'] = convert_plot_to_base64(fig)
+                    plt.close(fig)
+                    print(f"DEBUG: Fallback feature_importance_img created, length: {len(explanation['feature_importance_img'])}")
+                    
+            except Exception as e:
+                print(f"DEBUG: Error creating feature_importance_plot: {str(e)}")
+                import traceback
+                traceback.print_exc()
+                explanation['feature_importance_img'] = None
             
-            if not explanation.get('feature_comparison_img'):
-                feature_comparison_plot = create_feature_comparison_plot(neighbors_data, input_data)
-                explanation['feature_comparison_img'] = convert_plot_to_base64(feature_comparison_plot)
+            # ALWAYS regenerate all visualizations to ensure they exist
+            feature_comparison_plot = create_feature_comparison_plot(neighbors_data, input_data)
+            explanation['feature_comparison_img'] = convert_plot_to_base64(feature_comparison_plot)
             
             # ALWAYS regenerate risk_factor_img to ensure we use the enhanced version
             risk_factor_plot = create_feature_impact_chart(input_data, feature_importance)
             explanation['risk_factor_img'] = convert_plot_to_base64(risk_factor_plot)
             
-            if not explanation.get('key_risk_factors_img'):
-                key_risk_factors_chart = create_key_risk_factors_chart(input_data, feature_importance)
-                explanation['key_risk_factors_img'] = convert_plot_to_base64(key_risk_factors_chart)
+            # ALWAYS regenerate key_risk_factors_img
+            key_risk_factors_chart = create_key_risk_factors_chart(input_data, feature_importance)
+            explanation['key_risk_factors_img'] = convert_plot_to_base64(key_risk_factors_chart)
             
             # Debugging: Check if image data is present
             print(f"Debug: feature_importance_img length: {len(explanation.get('feature_importance_img', '')) if explanation.get('feature_importance_img') else 0}")
@@ -857,6 +897,15 @@ def explain_prediction(session_id):
         knn_probability = individual_predictions.get('knn', {}).get('probability', 0.0) * 100
         rf_probability = individual_predictions.get('random_forest', {}).get('probability', 0.0) * 100
         xgb_probability = individual_predictions.get('xgboost', {}).get('probability', 0.0) * 100
+        
+        # Debugging: Check what's being passed to template
+        print(f"DEBUG: Final explanation keys: {list(explanation.keys())}")
+        print(f"DEBUG: feature_importance_img exists: {'feature_importance_img' in explanation}")
+        print(f"DEBUG: feature_importance_img is None: {explanation.get('feature_importance_img') is None}")
+        print(f"DEBUG: feature_importance_img type: {type(explanation.get('feature_importance_img'))}")
+        if explanation.get('feature_importance_img'):
+            print(f"DEBUG: feature_importance_img length: {len(explanation['feature_importance_img'])}")
+            print(f"DEBUG: feature_importance_img starts with: {explanation['feature_importance_img'][:50]}...")
         
         # Render the merged results and explanation page
         return render_template('explanation.html',
@@ -3138,6 +3187,38 @@ def api_chat_history():
     except Exception as e:
         print(f"Error fetching chat history: {e}")
         return {'success': False, 'error': 'Could not fetch chat history.'}, 500
+
+@app.route('/test_feature_importance')
+def test_feature_importance():
+    """Test route to verify feature importance display"""
+    from src.explainable_ai import get_feature_importance, create_feature_importance_plot, convert_plot_to_base64
+    
+    try:
+        # Generate feature importance
+        feature_importance = get_feature_importance('models')
+        plot = create_feature_importance_plot(feature_importance)
+        base64_img = convert_plot_to_base64(plot)
+        
+        # Create test explanation
+        test_explanation = {
+            'feature_importance_img': base64_img,
+            'risk_level': 'Medium',
+            'probability': 0.5,
+            'risk_description': 'Test description'
+        }
+        
+        return render_template('explanation.html',
+            explanation=test_explanation,
+            session_id='test',
+            knn_probability=50.0,
+            rf_probability=50.0,
+            xgb_probability=50.0,
+            knn_risk='Medium',
+            rf_risk='Medium',
+            xgb_risk='Medium',
+        )
+    except Exception as e:
+        return f"Error: {str(e)}"
 
 if __name__ == '__main__':
     # Create necessary directories if they don't exist

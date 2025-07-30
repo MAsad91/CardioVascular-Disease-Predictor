@@ -2,6 +2,8 @@
 class ModalSystem {
     constructor() {
         this.modalContainer = null;
+        this.modalQueue = [];
+        this.isModalOpen = false;
         this.init();
     }
 
@@ -30,6 +32,13 @@ class ModalSystem {
     }
 
     showModal(title, message, type = 'info', options = {}) {
+        // Add to queue instead of showing immediately if a modal is already open
+        if (this.isModalOpen) {
+            this.modalQueue.push({ title, message, type, options });
+            return;
+        }
+
+        this.isModalOpen = true;
         const modal = document.createElement('div');
         modal.className = 'modal-dialog';
         modal.style.cssText = `
@@ -81,6 +90,8 @@ class ModalSystem {
             ` : ''}
         `;
 
+        // Clear any existing modals before adding new one
+        this.modalContainer.innerHTML = '';
         this.modalContainer.appendChild(modal);
         this.modalContainer.style.display = 'flex';
 
@@ -145,7 +156,20 @@ class ModalSystem {
                 if (this.modalContainer.children.length === 0) {
                     this.modalContainer.style.display = 'none';
                 }
+                
+                // Mark modal as closed and process queue
+                this.isModalOpen = false;
+                this.processQueue();
             }, 300);
+        }
+    }
+
+    processQueue() {
+        if (this.modalQueue.length > 0 && !this.isModalOpen) {
+            const nextModal = this.modalQueue.shift();
+            setTimeout(() => {
+                this.showModal(nextModal.title, nextModal.message, nextModal.type, nextModal.options);
+            }, 100); // Small delay to ensure smooth transition
         }
     }
 
@@ -223,7 +247,7 @@ function convertFlashToModal() {
             type === 'warning' ? 'Warning' : 'Information',
             message,
             type,
-            { autoClose: 5000 }
+            { autoClose: 3000 }
         );
     });
 }
@@ -272,7 +296,7 @@ function convertPageMessagesToModal() {
             type === 'warning' ? 'Warning' : 'Information',
             messageText,
             type,
-            { autoClose: 5000 }
+            { autoClose: 3000 }
         );
     });
 }
@@ -341,7 +365,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 type === 'warning' ? 'Warning' : 'Information',
                                 message,
                                 type,
-                                { autoClose: 5000 }
+                                { autoClose: 3000 }
                             );
                         }
                     }
