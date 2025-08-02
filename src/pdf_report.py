@@ -281,8 +281,8 @@ class ProfessionalPDFReport:
             for feature, img_base64 in explanation['boxplots'].items():
                 try:
                     img_data = base64.b64decode(img_base64)
-                    # Use slightly smaller size to fit more plots
-                    img = Image(BytesIO(img_data), width=4.8*inch, height=1.1*inch)
+                    # Use improved size to match web display
+                    img = Image(BytesIO(img_data), width=8.0*inch, height=1.5*inch)
                     img.hAlign = 'CENTER'
                     story.append(img)
                     story.append(Spacer(1, 0.02*inch))

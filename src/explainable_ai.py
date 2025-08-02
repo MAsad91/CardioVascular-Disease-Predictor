@@ -327,7 +327,7 @@ def create_feature_comparison_plot(neighbors_df, input_data, top_n=5):
     top_features = feature_names[:top_n]  # Just use first 5 for visualization
     
     # Create the plot
-    fig, axes = plt.subplots(len(top_features), 1, figsize=(10, 3*len(top_features)))
+    fig, axes = plt.subplots(len(top_features), 1, figsize=(18, 3.5*len(top_features)))
     
     # If only one feature, axes is not an array
     if len(top_features) == 1:
@@ -343,13 +343,13 @@ def create_feature_comparison_plot(neighbors_df, input_data, top_n=5):
         # Plot patient's value as a red dot
         patient_value = input_data.get(feature, None)
         if patient_value is not None:
-            ax.plot(patient_value, 0, 'o', color='red', markersize=8, label='Your Value')
+            ax.plot(patient_value, 0, 'o', color='red', markersize=16, label='Your Value')
         
         # Customize the plot
-        ax.set_title(f'Comparison for {feature.replace("_", " ").title()}', fontsize=14)
-        ax.set_xlabel('Value', fontsize=10)
+        ax.set_title(f'{feature.replace("_", " ").title()}', fontsize=14, fontweight='bold')
+        ax.set_xlabel('Value', fontsize=12, fontweight='bold')
         ax.set_ylabel('', fontsize=10) # No y-label for box plots
-        ax.legend()
+        ax.legend(fontsize=10)
         
         # Remove y-axis ticks and labels for cleaner box plots
         ax.set(yticks=[], yticklabels=[])
@@ -1183,25 +1183,96 @@ def generate_explanation(input_data, prediction, neighbors_data, feature_importa
         # --- Boxplots for Similar Cases ---
         boxplot_features = ['age', 'sex', 'cp', 'trestbps', 'chol']
         boxplots = {}
+        
         if neighbors_data is not None:
             for feature in boxplot_features:
                 if feature in neighbors_data.columns and feature in input_data:
-                    fig, ax = plt.subplots(figsize=(6, 2))
-                    ax.boxplot(neighbors_data[feature], vert=False, widths=0.7)
-                    ax.scatter(input_data[feature], 1, color='red', s=100, zorder=10)
-                    ax.set_title(f'Comparison for {feature}')
-                    ax.set_xlabel('Value')
-                    ax.set_yticks([])
-                    ax.legend(['Your value', 'Neighbors'], loc='upper right')
-                    plt.tight_layout()
-                    buf = BytesIO()
-                    fig.savefig(buf, format='png', bbox_inches='tight')
-                    buf.seek(0)
-                    img_base64 = base64.b64encode(buf.read()).decode('utf-8')
-                    plt.close(fig)
-                    boxplots[feature] = img_base64
-        print('DEBUG: boxplots keys:', list(boxplots.keys()))
-        print('DEBUG: key_factors keys:', list(rf_explanation.get('key_factors', {}).keys()))
+                    try:
+                        # Clear any existing plots to ensure clean generation
+                        plt.clf()
+                        plt.close('all')
+                        
+                        # Create boxplot with improved readability and better aspect ratio
+                        fig, ax = plt.subplots(figsize=(18, 3.5))
+                        ax.boxplot(neighbors_data[feature], vert=False, widths=0.8, patch_artist=True, 
+                                 boxprops=dict(facecolor='lightblue', alpha=0.7),
+                                 medianprops=dict(color='orange', linewidth=2),
+                                 whiskerprops=dict(color='black', linewidth=1.5),
+                                 capprops=dict(color='black', linewidth=1.5))
+                        ax.scatter(input_data[feature], 1, color='red', s=200, zorder=10, marker='o', edgecolors='darkred', linewidth=3)
+                        ax.set_title(f'{feature.replace("_", " ").title()}', fontsize=14, fontweight='bold', pad=15)
+                        ax.set_xlabel('Value', fontsize=12, fontweight='bold')
+                        ax.set_yticks([])
+                        ax.legend(['Your value', 'Neighbors'], loc='upper right', fontsize=10)
+                        ax.grid(True, alpha=0.3, axis='x')
+                        plt.tight_layout()
+                        
+                        buf = BytesIO()
+                        fig.savefig(buf, format='png', bbox_inches='tight', dpi=100)
+                        buf.seek(0)
+                        img_data = buf.getvalue()
+                        img_base64 = base64.b64encode(img_data).decode('utf-8')
+                        # Clean the base64 string (remove any newlines or whitespace)
+                        img_base64 = img_base64.replace('\n', '').replace('\r', '').strip()
+                        plt.close(fig)
+                        
+                        # Validate base64 data
+                        if img_base64 and len(img_base64) > 100:  # Should be reasonably long
+                            boxplots[feature] = img_base64
+                    except Exception as e:
+                        print(f"Error creating boxplot for {feature}: {str(e)}")
+        else:
+            # Create sample boxplots for testing
+            for feature in boxplot_features:
+                if feature in input_data:
+                    try:
+                        plt.clf()
+                        plt.close('all')
+                        
+                        # Create a simple boxplot with sample data - improved readability
+                        fig, ax = plt.subplots(figsize=(18, 3.5))
+                        
+                        # Generate sample data based on the feature
+                        if feature == 'age':
+                            sample_data = np.random.normal(55, 10, 50)
+                        elif feature == 'sex':
+                            sample_data = np.random.choice([0, 1], 50)
+                        elif feature == 'cp':
+                            sample_data = np.random.choice([0, 1, 2, 3], 50)
+                        elif feature == 'trestbps':
+                            sample_data = np.random.normal(130, 20, 50)
+                        elif feature == 'chol':
+                            sample_data = np.random.normal(200, 40, 50)
+                        else:
+                            sample_data = np.random.normal(50, 10, 50)
+                        
+                        ax.boxplot(sample_data, vert=False, widths=0.8, patch_artist=True, 
+                                 boxprops=dict(facecolor='lightblue', alpha=0.7),
+                                 medianprops=dict(color='orange', linewidth=2),
+                                 whiskerprops=dict(color='black', linewidth=1.5),
+                                 capprops=dict(color='black', linewidth=1.5))
+                        ax.scatter(input_data[feature], 1, color='red', s=200, zorder=10, marker='o', edgecolors='darkred', linewidth=3)
+                        ax.set_title(f'{feature.replace("_", " ").title()}', fontsize=14, fontweight='bold', pad=15)
+                        ax.set_xlabel('Value', fontsize=12, fontweight='bold')
+                        ax.set_yticks([])
+                        ax.legend(['Your value', 'Sample data'], loc='upper right', fontsize=10)
+                        ax.grid(True, alpha=0.3, axis='x')
+                        plt.tight_layout()
+                        
+                        buf = BytesIO()
+                        fig.savefig(buf, format='png', bbox_inches='tight', dpi=100)
+                        buf.seek(0)
+                        img_data = buf.getvalue()
+                        img_base64 = base64.b64encode(img_data).decode('utf-8')
+                        # Clean the base64 string (remove any newlines or whitespace)
+                        img_base64 = img_base64.replace('\n', '').replace('\r', '').strip()
+                        plt.close(fig)
+                        
+                        # Validate base64 data
+                        if img_base64 and len(img_base64) > 100:  # Should be reasonably long
+                            boxplots[feature] = img_base64
+                    except Exception as e:
+                        print(f"Error creating sample boxplot for {feature}: {str(e)}")
         
         # Generate comprehensive explanation text
         explanation_text = f"""Heart Disease Risk Assessment Results
@@ -1269,7 +1340,8 @@ Note: This assessment is based on multiple machine learning models and should be
                 'random_forest': rf_explanation,
                 'xgboost': xgb_explanation
             },
-            'boxplots': boxplots
+            'boxplots': boxplots,
+            'version': '2.0'  # Version to force regeneration when needed
         }
         
         return explanation

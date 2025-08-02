@@ -496,16 +496,16 @@
         <div class="comparison-container">
             {% for feature in ['age', 'sex', 'cp', 'trestbps', 'chol'] %}
                 {% if explanation.boxplots[feature] %}
-                    <div class="mb-3">
-                        <div class="comparison-item p-3" style="background: rgba(255, 255, 255, 0.05); border-radius: 0.75rem; border: 1px solid rgba(255, 255, 255, 0.1); width: 100%;">
-                            <div class="comparison-title text-center mb-3" style="color: #f3f6fa; font-weight: 600; font-size: 1.1rem;">
+                    <div class="mb-2">
+                        <div class="comparison-item p-2" style="background: rgba(255, 255, 255, 0.05); border-radius: 0.75rem; border: 1px solid rgba(255, 255, 255, 0.1); width: 100%;">
+                            <div class="comparison-title text-center mb-2" style="color: #f3f6fa; font-weight: 600; font-size: 1rem;">
                                 <i class="bi bi-graph-up me-2"></i>{{ feature.replace('_', ' ').title() }}
                             </div>
-                            <div class="chart-container text-center" style="position: relative; height: 280px; width: 100%; margin: 0 auto;">
-                                <img src="data:image/png;base64,{{ explanation.boxplots[feature] }}" 
+                            <div class="chart-container text-center" style="position: relative; height: 200px; width: 100%; max-width: 900px; margin: 0 auto;">
+                                <img src="{{ url_for('serve_boxplot', session_id=session_id, feature=feature) }}" 
                                      class="img-fluid rounded shadow" 
                                      alt="Comparison for {{ feature }}"
-                                     style="max-height: 280px; width: 100%; height: auto; object-fit: contain;">
+                                     style="max-height: 200px; width: 100%; height: auto; object-fit: contain; border-radius: 8px;">
                             </div>
                         </div>
                     </div>

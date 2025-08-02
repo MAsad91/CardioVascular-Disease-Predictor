@@ -15,4 +15,12 @@ opencv-python>=4.8.0  # Required for image processing
 numpy>=1.24.0  # Required for array operations
 pdf2image==1.16.3  # For PDF processing 
 Flask-Mail 
-python-dotenv 
+python-dotenv
+gunicorn>=20.1.0  # Production WSGI server
+scikit-learn>=1.3.0  # For ML models
+pandas>=1.5.0  # For data processing
+joblib>=1.3.0  # For model serialization
+matplotlib>=3.7.0  # For plotting
+seaborn>=0.12.0  # For enhanced plotting
+xgboost>=1.7.0  # For XGBoost model
+fpdf>=1.7.2  # For PDF generation 

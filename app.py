@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, send_from_directory, make_response, session, send_file
+from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, send_from_directory, make_response, session, send_file, abort, Response
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, login_required, current_user, login_user, logout_user
 import os
@@ -32,6 +32,8 @@ import pickle
 import numpy as np
 import cv2
 import traceback
+import matplotlib.pyplot as plt
+from io import BytesIO
 
 # Add the src directory to the path to import modules
 sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
@@ -69,7 +71,8 @@ app.secret_key = os.urandom(24)
 app.config.from_object(Config)
 
 # Database configuration
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///heart_disease.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///heart_disease.db')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Flask-Mail configuration
 app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER')
@@ -857,6 +860,10 @@ def explain_prediction(session_id):
             # Get neighbors data for KNN explanation
             neighbors_data = get_neighbors_data(input_data) if neighbors_data is None else neighbors_data
             
+            # Ensure boxplots exist in explanation
+            if 'boxplots' not in explanation:
+                print("WARNING: Boxplots missing from explanation data. They should have been generated during prediction.")
+            
             explanation['model_insights'] = {
                 'knn': generate_knn_explanation(input_data, consensus, neighbors_data, None),
                 'random_forest': generate_random_forest_explanation(input_data, consensus, None),
@@ -898,6 +905,20 @@ def explain_prediction(session_id):
         rf_probability = individual_predictions.get('random_forest', {}).get('probability', 0.0) * 100
         xgb_probability = individual_predictions.get('xgboost', {}).get('probability', 0.0) * 100
         
+        # Debug: Check if boxplots were regenerated
+        print(f"DEBUG: Final explanation boxplots keys: {list(explanation.get('boxplots', {}).keys())}")
+        print(f"DEBUG: Boxplot version: {explanation.get('boxplot_version', 'None')}")
+        print(f"DEBUG: Number of boxplots: {len(explanation.get('boxplots', {}))}")
+        print(f"DEBUG: Explanation keys: {list(explanation.keys())}")
+        print(f"DEBUG: Boxplots exist: {'boxplots' in explanation}")
+        if 'boxplots' in explanation:
+            print(f"DEBUG: Boxplots is dict: {isinstance(explanation['boxplots'], dict)}")
+            print(f"DEBUG: Boxplots is empty: {len(explanation['boxplots']) == 0}")
+        
+        print(f"DEBUG: Session ID: {session_id}")
+        print(f"DEBUG: Template being rendered: explanation.html")
+        print(f"DEBUG: Cache buster: {datetime.now().timestamp()}")
+        
         # Debugging: Check what's being passed to template
         print(f"DEBUG: Final explanation keys: {list(explanation.keys())}")
         print(f"DEBUG: feature_importance_img exists: {'feature_importance_img' in explanation}")
@@ -917,6 +938,7 @@ def explain_prediction(session_id):
             knn_risk=individual_predictions.get('knn', {}).get('risk_level', 'Unknown'),
             rf_risk=individual_predictions.get('random_forest', {}).get('risk_level', 'Unknown'),
             xgb_risk=individual_predictions.get('xgboost', {}).get('risk_level', 'Unknown'),
+            cache_buster=datetime.now().timestamp(),  # Force cache refresh
         )
     
     except Exception as e:
@@ -1789,7 +1811,8 @@ def risk_assessment():
                     individual_predictions=individual_predictions,
                     knn_probability=knn_probability,
                     rf_probability=rf_probability,
-                    xgb_probability=xgb_probability
+                    xgb_probability=xgb_probability,
+                    cache_buster=datetime.now().timestamp()
                 )
                 
             except Exception as e:
@@ -1804,7 +1827,8 @@ def risk_assessment():
                     individual_predictions=individual_predictions,
                     knn_probability=knn_probability,
                     rf_probability=rf_probability,
-                    xgb_probability=xgb_probability
+                    xgb_probability=xgb_probability,
+                    cache_buster=datetime.now().timestamp()
                 )
             
         except Exception as e:
@@ -3220,6 +3244,54 @@ def test_feature_importance():
     except Exception as e:
         return f"Error: {str(e)}"
 
+@app.route('/boxplot/<session_id>/<feature>')
+def serve_boxplot(session_id, feature):
+    """Serve boxplot images directly as PNG files instead of data URIs"""
+    try:
+        # Load the explanation data
+        explanation_file = os.path.join('temp', f'prediction_{session_id}.pkl')
+        if not os.path.exists(explanation_file):
+            abort(404)
+            
+        with open(explanation_file, 'rb') as f:
+            explanation = pickle.load(f)
+        
+        # Check if explanation has the 'explanation' nested structure
+        if 'explanation' in explanation:
+            actual_explanation = explanation['explanation']
+        else:
+            actual_explanation = explanation
+        
+        # Check if boxplot exists for this feature
+        if 'boxplots' not in actual_explanation or feature not in actual_explanation['boxplots']:
+            abort(404)
+            
+        # Get the base64 data and decode it
+        base64_data = actual_explanation['boxplots'][feature]
+        if not base64_data:
+            abort(404)
+            
+        # Decode base64 to binary
+        img_data = base64.b64decode(base64_data)
+        
+        # Return as PNG image
+        return Response(
+            img_data,
+            mimetype='image/png',
+            headers={
+                'Content-Type': 'image/png',
+                'Cache-Control': 'no-cache, no-store, must-revalidate',
+                'Pragma': 'no-cache',
+                'Expires': '0'
+            }
+        )
+        
+    except Exception as e:
+        print(f"Error serving boxplot {feature} for session {session_id}: {str(e)}")
+        abort(404)
+
+
+
 if __name__ == '__main__':
     # Create necessary directories if they don't exist
     os.makedirs('data', exist_ok=True)
@@ -3270,7 +3342,10 @@ if __name__ == '__main__':
         train_and_save_models(data_path, 'models')
         print("✅ Models trained successfully!")
     
+    # Get port from environment variable (for Render)
+    port = int(os.environ.get('PORT', 8080))
+    
     print("🚀 Starting Heart Care application...")
-    print("🌐 Visit: http://localhost:8080")
-    print("📚 API Documentation: http://localhost:8080/help")
-    app.run(host='127.0.0.1', port=8080, debug=True)
+    print(f"🌐 Visit: http://localhost:{port}")
+    print("📚 API Documentation: http://localhost:{port}/help")
+    app.run(host='0.0.0.0', port=port, debug=False)
