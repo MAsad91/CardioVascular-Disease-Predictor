@@ -25,12 +25,14 @@ class MedicalReportProcessor:
         try:
             import pytesseract
             
-            # Try common Tesseract installation paths
+            # Try common Tesseract installation paths (including Render/Linux paths)
             common_paths = [
                 r'C:\Program Files\Tesseract-OCR\tesseract.exe',
                 r'C:\Program Files (x86)\Tesseract-OCR\tesseract.exe',
                 '/usr/bin/tesseract',
-                '/usr/local/bin/tesseract'
+                '/usr/local/bin/tesseract',
+                '/opt/homebrew/bin/tesseract',  # macOS Homebrew
+                '/usr/local/opt/tesseract/bin/tesseract'  # macOS Homebrew alternative
             ]
             
             # Check if tesseract is in PATH
@@ -40,23 +42,36 @@ class MedicalReportProcessor:
             if tesseract_path:
                 pytesseract.pytesseract.tesseract_cmd = tesseract_path
                 self.tesseract_available = True
+                print(f"✅ Tesseract found in PATH: {tesseract_path}")
             else:
                 # Try common paths
                 for path in common_paths:
                     if os.path.exists(path):
                         pytesseract.pytesseract.tesseract_cmd = path
                         self.tesseract_available = True
+                        print(f"✅ Tesseract found at: {path}")
                         break
                 
                 if not self.tesseract_available:
-                    print("\nTesseract not found. Please follow these steps to install:")
+                    print("\n❌ Tesseract not found. Please follow these steps to install:")
                     print("1. Download Tesseract installer from: https://github.com/UB-Mannheim/tesseract/wiki")
                     print("2. Install to default location (C:\\Program Files\\Tesseract-OCR)")
                     print("3. Add Tesseract to your PATH environment variable")
                     print("4. Restart your computer if needed.")
+                    print("\nFor Render deployment, Tesseract will be installed automatically during build.")
         except ImportError:
-            print("Warning: pytesseract not installed. OCR functionality will be limited.")
+            print("❌ Warning: pytesseract not installed. OCR functionality will be limited.")
             print("Please install pytesseract: pip install pytesseract")
+        
+        # Test Tesseract availability
+        if self.tesseract_available:
+            try:
+                # Simple test to verify Tesseract is working
+                test_result = pytesseract.get_tesseract_version()
+                print(f"✅ Tesseract version: {test_result}")
+            except Exception as e:
+                print(f"⚠️  Tesseract found but test failed: {str(e)}")
+                self.tesseract_available = False
     
     def is_pdf(self, file_path):
         """Check if the file is a PDF"""
@@ -75,17 +90,38 @@ class MedicalReportProcessor:
                 print(f"PDF file not found: {pdf_path}")
                 raise ValueError(f"PDF file not found: {pdf_path}")
             
-            # Try to find poppler in common locations
-            poppler_path = r'C:\poppler\Library\bin'
-            if not os.path.exists(poppler_path):
-                print("\nPoppler not found. Please follow these steps to install:")
-                print("1. Download Poppler from: https://github.com/oschwartz10612/poppler-windows/releases/")
-                print("2. Extract to C:\\poppler")
-                print("3. Add C:\\poppler\\Library\\bin to system PATH")
-                print("4. Restart your application\n")
-                raise ValueError("Poppler not found. Please install poppler-utils.")
+            # Try to find poppler in common locations (including Linux paths for Render)
+            poppler_paths = [
+                r'C:\poppler\Library\bin',  # Windows
+                '/usr/bin',  # Linux (Render)
+                '/usr/local/bin',  # Linux alternative
+                '/opt/homebrew/bin'  # macOS Homebrew
+            ]
             
-            print(f"Using Poppler path: {poppler_path}")
+            poppler_path = None
+            for path in poppler_paths:
+                if os.path.exists(path):
+                    poppler_path = path
+                    break
+            
+            if not poppler_path:
+                print("\n⚠️  Poppler not found in common locations. Trying system PATH...")
+                # Try to find poppler in system PATH
+                from shutil import which
+                poppler_bin = which('pdftoppm')
+                if poppler_bin:
+                    poppler_path = os.path.dirname(poppler_bin)
+                    print(f"✅ Found Poppler in PATH: {poppler_path}")
+                else:
+                    print("\n❌ Poppler not found. Please follow these steps to install:")
+                    print("1. Download Poppler from: https://github.com/oschwartz10612/poppler-windows/releases/")
+                    print("2. Extract to C:\\poppler")
+                    print("3. Add C:\\poppler\\Library\\bin to system PATH")
+                    print("4. Restart your application")
+                    print("\nFor Render deployment, Poppler will be installed automatically during build.")
+                    raise ValueError("Poppler not found. Please install poppler-utils.")
+            
+            print(f"✅ Using Poppler path: {poppler_path}")
             
             # Convert PDF to images
             images = pdf2image.convert_from_path(pdf_path, poppler_path=poppler_path)

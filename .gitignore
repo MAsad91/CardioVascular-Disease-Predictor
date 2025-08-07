@@ -1,55 +1,94 @@
-# Ignore database files
-instance/
-*.db
-
-# Ignore model binaries and pickles
-models/
-*.pkl
-*.png
-
-# Ignore temporary files
-temp/
-*.pkl
-
-# Ignore virtual environments
-venv/
-.env/
-
-# Ignore OS and editor files
-.DS_Store
-Thumbs.db
-*.pyc
+# Python
 __pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
 
-# Ignore uploads and user-generated content
-uploads/
-*.pdf
-*.jpg
-*.jpeg
-*.png
-*.gif
-*.bmp
-*.tiff
+# Virtual Environment
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
 
-# Ignore logs
-*.log
+# Flask
+instance/
+.webassets-cache
 
-# Ignore environment variables
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Environment variables
 .env
 .env.local
-.env.production
+.env.development.local
+.env.test.local
+.env.production.local
 
-# Ignore IDE files
+# IDE
 .vscode/
 .idea/
 *.swp
 *.swo
+*~
 
-# Ignore OS generated files
+# OS
 .DS_Store
 .DS_Store?
 ._*
 .Spotlight-V100
 .Trashes
 ehthumbs.db
-Thumbs.db 
+Thumbs.db
+
+# Application specific
+uploads/
+temp/
+*.log
+logs/
+
+# ML Models - EXCLUDE large model files for deployment
+# These files are large and will be trained on first run
+models/*.pkl
+models/*.joblib
+models/*.png
+models/*.jpg
+models/*.jpeg
+
+# Data files - EXCLUDE large data files for deployment
+# The application will download data on first run
+data/*.csv
+data/*.json
+data/*.xlsx
+data/*.xls
+
+# Temporary files
+*.tmp
+*.temp
+
+# Keep essential model files for deployment
+!models/__init__.py
+!models/.gitkeep
+
+# Keep essential data files for deployment  
+!data/__init__.py
+!data/.gitkeep 

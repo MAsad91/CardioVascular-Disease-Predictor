@@ -24,8 +24,15 @@ import string
 
 try:
     import pytesseract
+    # Try to configure Tesseract path for Render deployment
+    import os
+    if os.path.exists('/usr/bin/tesseract'):
+        pytesseract.pytesseract.tesseract_cmd = '/usr/bin/tesseract'
+    elif os.path.exists('/usr/local/bin/tesseract'):
+        pytesseract.pytesseract.tesseract_cmd = '/usr/local/bin/tesseract'
 except ImportError:
     pytesseract = None
+    print("Warning: pytesseract not available. OCR features will be disabled.")
 from fpdf import FPDF
 import json
 import pickle
