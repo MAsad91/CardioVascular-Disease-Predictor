@@ -33,7 +33,7 @@ services:
       echo "Verifying Tesseract installation..."
       tesseract --version
       echo "Tesseract installation verified!"
-    startCommand: gunicorn app:app --bind 0.0.0.0:$PORT
+    startCommand: python startup.py
     envVars:
       - key: PYTHON_VERSION
         value: 3.9.16
