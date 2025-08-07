@@ -11,6 +11,8 @@ import io
 from werkzeug.utils import secure_filename
 import joblib
 from datetime import datetime, timedelta
+# Import these modules but don't instantiate them yet
+# They will be initialized in the main block
 from src.heart_disease_predictor import HeartDiseasePredictor
 from src.image_processor_new import MedicalReportProcessor
 from src.chatbot import HeartDiseaseChatbot
@@ -164,10 +166,10 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max upload size
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(TEMP_FOLDER, exist_ok=True)
 
-# Initialize components
-predictor = HeartDiseasePredictor()
-report_processor = MedicalReportProcessor()
-chatbot = HeartDiseaseChatbot()
+# Global variables for components (will be initialized in main)
+predictor = None
+report_processor = None
+chatbot = None
 
 # Decorators for role-based access control
 def admin_required(f):
@@ -1421,6 +1423,12 @@ def chat():
             return jsonify({'error': 'No message provided'}), 400
         
         try:
+            # Check if chatbot is initialized
+            if chatbot is None:
+                return jsonify({
+                    'error': 'Chatbot is not available. Please try again later.'
+                }), 503
+            
             # Process the user's response
             next_question, health_data = chatbot.process_response(user_input)
             
@@ -1475,6 +1483,10 @@ def chat():
             }), 500
     
     # GET request - start new chat
+    if chatbot is None:
+        flash('Chatbot is not available. Please try again later.', 'error')
+        return redirect(url_for('index'))
+    
     chatbot.reset()
     initial_question = chatbot.get_current_question()['message']
     return render_template('chat.html', initial_question=initial_question)
@@ -3348,6 +3360,31 @@ if __name__ == '__main__':
             print("✅ Models trained successfully!")
         else:
             print("✅ Pre-trained models found")
+        
+        # Initialize components after models are ready
+        print("🔧 Initializing application components...")
+        global predictor, report_processor, chatbot
+        
+        try:
+            predictor = HeartDiseasePredictor()
+            print("✅ Heart Disease Predictor initialized")
+        except Exception as e:
+            print(f"⚠️  Failed to initialize Heart Disease Predictor: {str(e)}")
+            predictor = None
+        
+        try:
+            report_processor = MedicalReportProcessor()
+            print("✅ Medical Report Processor initialized")
+        except Exception as e:
+            print(f"⚠️  Failed to initialize Medical Report Processor: {str(e)}")
+            report_processor = None
+        
+        try:
+            chatbot = HeartDiseaseChatbot()
+            print("✅ Heart Disease Chatbot initialized")
+        except Exception as e:
+            print(f"⚠️  Failed to initialize Heart Disease Chatbot: {str(e)}")
+            chatbot = None
         
         # Get port from environment variable (for Render)
         port = int(os.environ.get('PORT', 8080))
