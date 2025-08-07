@@ -3300,9 +3300,73 @@ def serve_boxplot(session_id, feature):
 
 
 if __name__ == '__main__':
-    # This is now handled by startup.py for production deployment
-    # For local development, you can still run this file directly
-    port = int(os.environ.get('PORT', 8080))
-    print("🚀 Starting Heart Care application...")
-    print(f"🌐 Visit: http://localhost:{port}")
-    app.run(host='0.0.0.0', port=port, debug=False)
+    try:
+        # Create necessary directories if they don't exist
+        os.makedirs('data', exist_ok=True)
+        os.makedirs('models', exist_ok=True)
+        os.makedirs('uploads', exist_ok=True)
+        os.makedirs('temp', exist_ok=True)
+        
+        # Initialize database
+        with app.app_context():
+            init_db()
+            print("✅ Database initialized")
+            
+            # Check if any users exist
+            try:
+                user_count = User.query.count()
+                if user_count == 0:
+                    print("⚠️  No users found in database")
+                    print("💡 Create your first account via the signup page")
+                else:
+                    print(f"✅ Database has {user_count} user(s)")
+            except Exception as e:
+                print(f"⚠️  Database check failed: {str(e)}")
+        
+        # Check if models exist, if not train them
+        knn_model_path = os.path.join('models', 'knn_heart_disease_model.pkl')
+        rf_model_path = os.path.join('models', 'random_forest_model.pkl')
+        xgb_model_path = os.path.join('models', 'xgboost_model.pkl')
+        
+        models_exist = (os.path.exists(knn_model_path) and 
+                       os.path.exists(rf_model_path) and 
+                       os.path.exists(xgb_model_path))
+        
+        if not models_exist:
+            print("🤖 Training machine learning models...")
+            
+            # Check if data exists, if not download it
+            data_path = os.path.join('data', 'heart_disease.csv')
+            if not os.path.exists(data_path):
+                print("📥 Downloading heart disease dataset...")
+                download_heart_disease_data()
+                print("✅ Dataset downloaded")
+            
+            # Train all models
+            print("🔄 Training models (this may take a few minutes)...")
+            train_and_save_models(data_path, 'models')
+            print("✅ Models trained successfully!")
+        else:
+            print("✅ Pre-trained models found")
+        
+        # Get port from environment variable (for Render)
+        port = int(os.environ.get('PORT', 8080))
+        
+        print("🚀 Starting Heart Care application...")
+        print(f"🌐 Application will be available on port: {port}")
+        print("📚 API Documentation: /help")
+        
+        # Start the application
+        app.run(
+            host='0.0.0.0',  # Bind to all interfaces
+            port=port,        # Use the port from environment
+            debug=False,      # Disable debug mode for production
+            threaded=True     # Enable threading for better performance
+        )
+        
+    except Exception as e:
+        print(f"❌ Failed to start application: {str(e)}")
+        # Try to start with minimal configuration
+        port = int(os.environ.get('PORT', 8080))
+        print("🔄 Attempting to start with minimal configuration...")
+        app.run(host='0.0.0.0', port=port, debug=False)
