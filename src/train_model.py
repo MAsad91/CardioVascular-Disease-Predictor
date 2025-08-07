@@ -11,7 +11,7 @@ from concurrent.futures import ThreadPoolExecutor
 import threading
 from functools import partial
 
-from preprocess import preprocess_data
+from .preprocess import preprocess_data
 
 def find_optimal_k(X_train, y_train, k_range=range(1, 31, 2), n_jobs=-1):
     """

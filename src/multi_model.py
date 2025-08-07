@@ -16,7 +16,7 @@ from functools import lru_cache
 from concurrent.futures import ThreadPoolExecutor
 import threading
 
-from preprocess import preprocess_data, preprocess_input
+from .preprocess import preprocess_data, preprocess_input
 
 # Global cache for models
 _model_cache = {}

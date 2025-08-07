@@ -2,7 +2,7 @@ import os
 import numpy as np
 import joblib
 
-from preprocess import preprocess_input
+from .preprocess import preprocess_input
 
 def load_model_and_dependencies(model_dir='../models'):
     """

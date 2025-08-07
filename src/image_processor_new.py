@@ -6,7 +6,7 @@ import re
 from PIL import Image
 import pdf2image
 from pdf2image.exceptions import PDFInfoNotInstalledError, PDFPageCountError, PDFSyntaxError
-from src.ecg_analyzer import ECGAnalyzer
+from .ecg_analyzer import ECGAnalyzer
 from PIL import ImageEnhance
 import traceback
 import json

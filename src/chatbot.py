@@ -1,4 +1,4 @@
-from src.heart_disease_info import HeartDiseaseInfo
+from .heart_disease_info import HeartDiseaseInfo
 import re
 
 class ProfessionalHeartDoctorChatbot:
