@@ -538,18 +538,6 @@ def signup():
             return render_template('signup.html')
     
     return render_template('signup.html')
-        new_user.set_password(password)
-        try:
-            db.session.add(new_user)
-            db.session.commit()
-            flash('Account created successfully! Please log in.', 'success')
-            return redirect(url_for('login'))
-        except Exception as e:
-            db.session.rollback()
-            print(f"Error creating user: {e}")
-            flash('An error occurred while creating your account. Please try again.', 'error')
-            return render_template('signup.html')
-    return render_template('signup.html')
 
 @app.route('/logout')
 @login_required
