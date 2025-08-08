@@ -464,49 +464,80 @@ def signup():
         return redirect(url_for('index'))
     
     if request.method == 'POST':
-        username = request.form.get('user_name')  # updated to match form field
-        email = request.form.get('email')
-        password = request.form.get('password')
-        confirm_password = request.form.get('confirm_password')
-        
-        # Validation
-        if not all([username, email, password, confirm_password]):
-            flash('Please fill in all required fields.', 'error')
+        try:
+            username = request.form.get('user_name')  # updated to match form field
+            email = request.form.get('email')
+            password = request.form.get('password')
+            confirm_password = request.form.get('confirm_password')
+            
+            print(f"[DEBUG] Signup attempt - Username: {username}, Email: {email}")
+            
+            # Validation
+            if not all([username, email, password, confirm_password]):
+                flash('Please fill in all required fields.', 'error')
+                return render_template('signup.html')
+            
+            # Validate email format
+            email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+            if not re.match(email_pattern, email):
+                flash('Invalid email address.', 'error')
+                return render_template('signup.html')
+            
+            # Validate username format
+            username_pattern = r'^[a-zA-Z0-9_]+$'
+            if not re.match(username_pattern, username):
+                flash('Username can only contain letters, numbers, and underscores.', 'error')
+                return render_template('signup.html')
+            
+            if password != confirm_password:
+                flash('Passwords do not match.', 'error')
+                return render_template('signup.html')
+            if len(password) < 6:
+                flash('Password must be at least 6 characters long.', 'error')
+                return render_template('signup.html')
+            
+            # Check if username or email already exists
+            try:
+                existing_user = User.query.filter((User.username == username) | (User.email == email)).first()
+                if existing_user:
+                    flash('Username or email already exists.', 'error')
+                    return render_template('signup.html')
+            except Exception as e:
+                print(f"❌ Database error checking existing user: {str(e)}")
+                flash('Database error. Please try again.', 'error')
+                return render_template('signup.html')
+            
+            # Create new user (no role field)
+            try:
+                new_user = User(
+                    username=username,
+                    email=email,
+                    created_at=datetime.utcnow(),
+                    is_active=True,
+                    email_verified=False
+                )
+                new_user.set_password(password)
+                db.session.add(new_user)
+                db.session.commit()
+                print(f"✅ User created successfully: {username}")
+                
+                # Log the user in automatically
+                login_user(new_user)
+                flash('Account created successfully! Welcome to Heart Care.', 'success')
+                return redirect(url_for('index'))
+                
+            except Exception as e:
+                print(f"❌ Error creating user: {str(e)}")
+                db.session.rollback()
+                flash('Error creating account. Please try again.', 'error')
+                return render_template('signup.html')
+                
+        except Exception as e:
+            print(f"❌ General signup error: {str(e)}")
+            flash('An error occurred. Please try again.', 'error')
             return render_template('signup.html')
-        
-        # Validate email format
-        email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
-        if not re.match(email_pattern, email):
-            flash('Invalid email address.', 'error')
-            return render_template('signup.html')
-        
-        # Validate username format
-        username_pattern = r'^[a-zA-Z0-9_]+$'
-        if not re.match(username_pattern, username):
-            flash('Username can only contain letters, numbers, and underscores.', 'error')
-            return render_template('signup.html')
-        
-        if password != confirm_password:
-            flash('Passwords do not match.', 'error')
-            return render_template('signup.html')
-        if len(password) < 6:
-            flash('Password must be at least 6 characters long.', 'error')
-            return render_template('signup.html')
-        
-        # Check if username or email already exists
-        existing_user = User.query.filter((User.username == username) | (User.email == email)).first()
-        if existing_user:
-            flash('Username or email already exists.', 'error')
-            return render_template('signup.html')
-        
-        # Create new user (no role field)
-        new_user = User(
-            username=username,
-            email=email,
-            created_at=datetime.utcnow(),
-            is_active=True,
-            email_verified=False
-        )
+    
+    return render_template('signup.html')
         new_user.set_password(password)
         try:
             db.session.add(new_user)
