@@ -80,7 +80,9 @@ app.secret_key = os.urandom(24)
 app.config.from_object(Config)
 
 # Database configuration
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///heart_disease.db')
+# Use absolute path for database file to ensure it's created in the correct location
+db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'heart_disease.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', f'sqlite:///{db_path}')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Flask-Mail configuration
@@ -254,10 +256,25 @@ def init_db():
     """Initialize the database tables"""
     try:
         with app.app_context():
+            # Create all tables
             db.create_all()
-            print("Database tables created successfully")
+            print("✅ Database tables created successfully")
+            
+            # Verify that tables were created
+            inspector = db.inspect(db.engine)
+            tables = inspector.get_table_names()
+            print(f"📋 Created tables: {tables}")
+            
+            # Check if users table exists
+            if 'users' in tables:
+                print("✅ Users table exists")
+            else:
+                print("❌ Users table not found!")
+                
     except Exception as e:
-        print(f"Error creating database tables: {str(e)}")
+        print(f"❌ Error creating database tables: {str(e)}")
+        import traceback
+        traceback.print_exc()
 
 # Authentication helper functions
 def save_user_prediction_to_db(user_id, session_id, input_data, consensus, individual_predictions, explanation, source='manual_entry'):
