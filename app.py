@@ -80,8 +80,10 @@ app.secret_key = os.urandom(24)
 app.config.from_object(Config)
 
 # Database configuration
-# Use absolute path for database file to ensure it's created in the correct location
-db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'heart_disease.db')
+# Use the instance folder for database file (Flask default)
+instance_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'instance')
+os.makedirs(instance_path, exist_ok=True)
+db_path = os.path.join(instance_path, 'heart_disease.db')
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', f'sqlite:///{db_path}')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
@@ -377,11 +379,16 @@ def login():
                 flash_message('Please fill in all fields.', 'error', page_specific=False)
                 return render_template('login.html')
             
-            # Try to find user by username or email
+                    # Try to find user by username or email
+        try:
             user = User.query.filter(
                 (User.username == username_or_email) | 
                 (User.email == username_or_email)
             ).first()
+        except Exception as e:
+            print(f"❌ Database query error in login: {str(e)}")
+            flash_message('Database error. Please try again.', 'error', page_specific=False)
+            return render_template('login.html')
             
             if user and user.check_password(password):
                 if not user.is_active:
@@ -499,7 +506,12 @@ def forgot_password():
         if not email:
             flash('Please enter your email address.', 'error')
             return render_template('forgot_password.html')
-        user = User.query.filter_by(email=email).first()
+        try:
+            user = User.query.filter_by(email=email).first()
+        except Exception as e:
+            print(f"❌ Database query error in forgot_password: {str(e)}")
+            flash('Database error. Please try again.', 'error')
+            return render_template('forgot_password.html')
         if not user:
             flash('No user found with that email address.', 'error')
             return render_template('forgot_password.html')
@@ -3401,8 +3413,18 @@ if __name__ == '__main__':
     print(f"🌐 Application will be available on port: {port}")
     print("📚 API Documentation: /help")
     
-    # Start the application immediately
-    # Initialization will happen in background or on first request
+    # Initialize database immediately before starting the app
+    print("🔧 Initializing database...")
+    try:
+        with app.app_context():
+            init_db()
+            print("✅ Database initialized successfully")
+    except Exception as e:
+        print(f"❌ Database initialization failed: {str(e)}")
+        import traceback
+        traceback.print_exc()
+    
+    # Start the application
     app.run(
         host='0.0.0.0',  # Bind to all interfaces
         port=port,        # Use the port from environment
