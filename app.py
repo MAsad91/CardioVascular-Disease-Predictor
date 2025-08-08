@@ -868,8 +868,10 @@ def help_page():
 def test_db():
     """Test database connection and tables"""
     try:
-        # Test database connection
-        db.engine.execute('SELECT 1')
+        # Test database connection using with statement
+        with db.engine.connect() as conn:
+            result = conn.execute(db.text('SELECT 1'))
+            result.fetchone()
         print("✅ Database connection successful")
         
         # Check if tables exist
