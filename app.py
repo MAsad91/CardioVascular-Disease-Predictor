@@ -876,6 +876,48 @@ def about():
 def help_page():
     return render_template('help.html')
 
+@app.route('/test_db')
+def test_db():
+    """Test database connection and tables"""
+    try:
+        # Test database connection
+        db.engine.execute('SELECT 1')
+        print("✅ Database connection successful")
+        
+        # Check if tables exist
+        inspector = db.inspect(db.engine)
+        tables = inspector.get_table_names()
+        print(f"📋 Available tables: {tables}")
+        
+        # Check users table
+        if 'users' in tables:
+            user_count = User.query.count()
+            print(f"👥 Number of users: {user_count}")
+            
+            # List first few users
+            users = User.query.limit(5).all()
+            for user in users:
+                print(f"  - {user.username} ({user.email}) - Active: {user.is_active}")
+        else:
+            print("❌ Users table not found!")
+            
+        return {
+            'status': 'success',
+            'tables': tables,
+            'user_count': User.query.count() if 'users' in tables else 0,
+            'message': 'Database connection and tables working'
+        }
+        
+    except Exception as e:
+        print(f"❌ Database test failed: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return {
+            'status': 'error',
+            'error': str(e),
+            'message': 'Database connection failed'
+        }
+
 @app.route('/test_messages')
 def test_messages():
     """Test route to verify message handling"""
