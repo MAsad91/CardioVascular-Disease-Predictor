@@ -405,22 +405,28 @@ def login():
             password = request.form.get('password')
             remember = request.form.get('remember', False)
             
+            print(f"[DEBUG] Login attempt - Username/Email: {username_or_email}")
+            
             if not username_or_email or not password:
                 flash_message('Please fill in all fields.', 'error', page_specific=False)
                 return render_template('login.html')
             
-                    # Try to find user by username or email
-        try:
-            user = User.query.filter(
-                (User.username == username_or_email) | 
-                (User.email == username_or_email)
-            ).first()
-        except Exception as e:
-            print(f"❌ Database query error in login: {str(e)}")
-            flash_message('Database error. Please try again.', 'error', page_specific=False)
-            return render_template('login.html')
+            # Try to find user by username or email
+            try:
+                user = User.query.filter(
+                    (User.username == username_or_email) | 
+                    (User.email == username_or_email)
+                ).first()
+                
+                print(f"[DEBUG] User found: {user.username if user else 'None'}")
+                
+            except Exception as e:
+                print(f"❌ Database query error in login: {str(e)}")
+                flash_message('Database error. Please try again.', 'error', page_specific=False)
+                return render_template('login.html')
             
             if user and user.check_password(password):
+                print(f"✅ Password check passed for user: {user.username}")
                 if not user.is_active:
                     flash_message('Your account has been deactivated. Please contact support.', 'error', page_specific=False)
                     return render_template('login.html')
@@ -444,6 +450,7 @@ def login():
                 next_page = request.args.get('next')
                 return redirect(next_page) if next_page else redirect(url_for('index'))
             else:
+                print(f"❌ Login failed - User: {user.username if user else 'None'}, Password check: {user.check_password(password) if user else 'N/A'}")
                 flash_message('Invalid username/email or password.', 'error', page_specific=False)
         
         # Get logout message from session if exists
