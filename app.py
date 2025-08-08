@@ -270,6 +270,28 @@ def init_db():
             # Check if users table exists
             if 'users' in tables:
                 print("✅ Users table exists")
+                
+                # Check if any users exist
+                user_count = User.query.count()
+                if user_count == 0:
+                    print("📝 Creating sample admin user...")
+                    # Create a sample admin user
+                    admin_user = User(
+                        username='admin',
+                        email='admin@heartcare.com',
+                        first_name='Admin',
+                        last_name='User',
+                        role='admin',
+                        is_active=True,
+                        email_verified=True,
+                        created_at=datetime.utcnow()
+                    )
+                    admin_user.set_password('admin123')
+                    db.session.add(admin_user)
+                    db.session.commit()
+                    print("✅ Sample admin user created (username: admin, password: admin123)")
+                else:
+                    print(f"✅ Database has {user_count} existing user(s)")
             else:
                 print("❌ Users table not found!")
                 

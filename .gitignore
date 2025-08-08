@@ -31,10 +31,11 @@ venv.bak/
 # Flask
 .webassets-cache
 
-# Database (keep for deployment)
-# *.db
-# *.sqlite
-# *.sqlite3
+# Database (SECURITY: Don't commit user data)
+instance/
+*.db
+*.sqlite
+*.sqlite3
 
 # Environment variables
 .env
