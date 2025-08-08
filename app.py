@@ -3363,7 +3363,6 @@ if __name__ == '__main__':
         
         # Initialize components after models are ready
         print("🔧 Initializing application components...")
-        global predictor, report_processor, chatbot
         
         try:
             predictor = HeartDiseasePredictor()
