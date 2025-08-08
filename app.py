@@ -413,6 +413,8 @@ def login():
             
             # Try to find user by username or email
             try:
+                print(f"[DEBUG] Starting database query...")
+                # Use a more efficient query
                 user = User.query.filter(
                     (User.username == username_or_email) | 
                     (User.email == username_or_email)
@@ -420,38 +422,52 @@ def login():
                 
                 print(f"[DEBUG] User found: {user.username if user else 'None'}")
                 
+                if not user:
+                    print(f"❌ User not found: {username_or_email}")
+                    flash_message('Invalid username/email or password.', 'error', page_specific=False)
+                    return render_template('login.html')
+                
             except Exception as e:
                 print(f"❌ Database query error in login: {str(e)}")
                 flash_message('Database error. Please try again.', 'error', page_specific=False)
                 return render_template('login.html')
             
-            if user and user.check_password(password):
-                print(f"✅ Password check passed for user: {user.username}")
-                if not user.is_active:
-                    flash_message('Your account has been deactivated. Please contact support.', 'error', page_specific=False)
-                    return render_template('login.html')
+            # Check password
+            print(f"[DEBUG] Checking password for user: {user.username}")
+            try:
+                password_valid = user.check_password(password)
+                print(f"[DEBUG] Password check result: {password_valid}")
                 
-                # Update last login
-                user.last_login = datetime.utcnow()
-                db.session.commit()
-                
-                # Log the user in
-                login_user(user, remember=remember)
-                
-                # Store welcome message as page-specific message for dashboard
-                session['flash_messages'] = session.get('flash_messages', [])
-                session['flash_messages'].append({
-                    'message': f'Welcome back, {user.get_full_name()}!',
-                    'category': 'success',
-                    'page': 'index'  # Explicitly set for dashboard page
-                })
-                
-                # Redirect to next page or index
-                next_page = request.args.get('next')
-                return redirect(next_page) if next_page else redirect(url_for('index'))
-            else:
-                print(f"❌ Login failed - User: {user.username if user else 'None'}, Password check: {user.check_password(password) if user else 'N/A'}")
-                flash_message('Invalid username/email or password.', 'error', page_specific=False)
+                if password_valid:
+                    print(f"✅ Password check passed for user: {user.username}")
+                    if not user.is_active:
+                        flash_message('Your account has been deactivated. Please contact support.', 'error', page_specific=False)
+                        return render_template('login.html')
+                    
+                    # Update last login
+                    user.last_login = datetime.utcnow()
+                    db.session.commit()
+                    
+                    # Log the user in
+                    login_user(user, remember=remember)
+                    
+                    # Store welcome message as page-specific message for dashboard
+                    session['flash_messages'] = session.get('flash_messages', [])
+                    session['flash_messages'].append({
+                        'message': f'Welcome back, {user.get_full_name()}!',
+                        'category': 'success',
+                        'page': 'index'  # Explicitly set for dashboard page
+                    })
+                    
+                    # Redirect to next page or index
+                    next_page = request.args.get('next')
+                    return redirect(next_page) if next_page else redirect(url_for('index'))
+                else:
+                    print(f"❌ Password check failed for user: {user.username}")
+                    flash_message('Invalid username/email or password.', 'error', page_specific=False)
+            except Exception as e:
+                print(f"❌ Password check error: {str(e)}")
+                flash_message('Login error. Please try again.', 'error', page_specific=False)
         
         # Get logout message from session if exists
         logout_message = session.pop('logout_message', None)
