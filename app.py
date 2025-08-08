@@ -347,53 +347,61 @@ def flash_message(message, category='info', page_specific=True):
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     """Login page"""
-    if current_user.is_authenticated:
-        return redirect(url_for('index'))
-    
-    if request.method == 'POST':
-        username_or_email = request.form.get('username_or_email')
-        password = request.form.get('password')
-        remember = request.form.get('remember', False)
+    try:
+        if current_user.is_authenticated:
+            return redirect(url_for('index'))
         
-        if not username_or_email or not password:
-            flash_message('Please fill in all fields.', 'error', page_specific=False)
-            return render_template('login.html')
-        
-        # Try to find user by username or email
-        user = User.query.filter(
-            (User.username == username_or_email) | 
-            (User.email == username_or_email)
-        ).first()
-        
-        if user and user.check_password(password):
-            if not user.is_active:
-                flash_message('Your account has been deactivated. Please contact support.', 'error', page_specific=False)
+        if request.method == 'POST':
+            username_or_email = request.form.get('username_or_email')
+            password = request.form.get('password')
+            remember = request.form.get('remember', False)
+            
+            if not username_or_email or not password:
+                flash_message('Please fill in all fields.', 'error', page_specific=False)
                 return render_template('login.html')
             
-            # Update last login
-            user.last_login = datetime.utcnow()
-            db.session.commit()
+            # Try to find user by username or email
+            user = User.query.filter(
+                (User.username == username_or_email) | 
+                (User.email == username_or_email)
+            ).first()
             
-            # Log the user in
-            login_user(user, remember=remember)
-            
-            # Store welcome message as page-specific message for dashboard
-            session['flash_messages'] = session.get('flash_messages', [])
-            session['flash_messages'].append({
-                'message': f'Welcome back, {user.get_full_name()}!',
-                'category': 'success',
-                'page': 'index'  # Explicitly set for dashboard page
-            })
-            
-            # Redirect to next page or index
-            next_page = request.args.get('next')
-            return redirect(next_page) if next_page else redirect(url_for('index'))
-        else:
-            flash_message('Invalid username/email or password.', 'error', page_specific=False)
-    
-    # Get logout message from session if exists
-    logout_message = session.pop('logout_message', None)
-    return render_template('login.html', logout_message=logout_message)
+            if user and user.check_password(password):
+                if not user.is_active:
+                    flash_message('Your account has been deactivated. Please contact support.', 'error', page_specific=False)
+                    return render_template('login.html')
+                
+                # Update last login
+                user.last_login = datetime.utcnow()
+                db.session.commit()
+                
+                # Log the user in
+                login_user(user, remember=remember)
+                
+                # Store welcome message as page-specific message for dashboard
+                session['flash_messages'] = session.get('flash_messages', [])
+                session['flash_messages'].append({
+                    'message': f'Welcome back, {user.get_full_name()}!',
+                    'category': 'success',
+                    'page': 'index'  # Explicitly set for dashboard page
+                })
+                
+                # Redirect to next page or index
+                next_page = request.args.get('next')
+                return redirect(next_page) if next_page else redirect(url_for('index'))
+            else:
+                flash_message('Invalid username/email or password.', 'error', page_specific=False)
+        
+        # Get logout message from session if exists
+        logout_message = session.pop('logout_message', None)
+        return render_template('login.html', logout_message=logout_message)
+        
+    except Exception as e:
+        print(f"❌ Login route error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        flash_message('An error occurred. Please try again.', 'error', page_specific=False)
+        return render_template('login.html')
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
@@ -655,33 +663,7 @@ def initialize_app():
             init_db()
             print("✅ Database initialized")
         
-        # Check if models exist, if not train them
-        knn_model_path = os.path.join('models', 'knn_heart_disease_model.pkl')
-        rf_model_path = os.path.join('models', 'random_forest_model.pkl')
-        xgb_model_path = os.path.join('models', 'xgboost_model.pkl')
-        
-        models_exist = (os.path.exists(knn_model_path) and 
-                       os.path.exists(rf_model_path) and 
-                       os.path.exists(xgb_model_path))
-        
-        if not models_exist:
-            print("🤖 Training machine learning models...")
-            
-            # Check if data exists, if not download it
-            data_path = os.path.join('data', 'heart_disease.csv')
-            if not os.path.exists(data_path):
-                print("📥 Downloading heart disease dataset...")
-                download_heart_disease_data()
-                print("✅ Dataset downloaded")
-            
-            # Train all models
-            print("🔄 Training models (this may take a few minutes)...")
-            train_and_save_models(data_path, 'models')
-            print("✅ Models trained successfully!")
-        else:
-            print("✅ Pre-trained models found")
-        
-        # Initialize components after models are ready
+        # Initialize components (skip model training for now to avoid blocking)
         try:
             predictor = HeartDiseasePredictor()
             print("✅ Heart Disease Predictor initialized")
