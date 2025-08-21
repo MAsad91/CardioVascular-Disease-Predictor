@@ -10,7 +10,7 @@ import re
 import io
 from werkzeug.utils import secure_filename
 import joblib
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 # Import these modules but don't instantiate them yet
 # They will be initialized in the main block
 from src.heart_disease_predictor import HeartDiseasePredictor
@@ -119,7 +119,7 @@ login_manager.login_message_category = 'info'
 @login_manager.user_loader
 def load_user(user_id):
     """Load user for Flask-Login"""
-    return User.query.get(int(user_id))
+    return db.session.get(User, int(user_id))
 
 @app.context_processor
 def inject_user():
@@ -445,7 +445,7 @@ def login():
                         return render_template('login.html')
                     
                     # Update last login
-                    user.last_login = datetime.utcnow()
+                    user.last_login = datetime.now(timezone.utc)
                     db.session.commit()
                     
                     # Log the user in
@@ -1237,10 +1237,14 @@ def upload_report():
                                                 value = None
                                         # Special handling for fbs (fasting blood sugar)
                                         if field == 'fbs':
-                                            # If value is numeric, map to dropdown value
+                                            # If value is numeric, check if it's already a classification (0/1) or a raw value
                                             try:
                                                 fbs_num = float(value)
-                                                if fbs_num > 120:
+                                                # If the value is 0 or 1, it's already a classification
+                                                if fbs_num in [0, 1]:
+                                                    value = str(int(fbs_num))
+                                                # If it's a raw blood sugar value, classify it
+                                                elif fbs_num > 120:
                                                     value = '1'
                                                 else:
                                                     value = '0'
@@ -1254,6 +1258,19 @@ def upload_report():
                                                         value = '0'
                                                     elif 'high' in value.lower() or '>' in value:
                                                         value = '1'
+                                                    # Handle numeric strings for FBS
+                                                    elif field == 'fbs' and value.isdigit():
+                                                        fbs_num = int(value)
+                                                        if fbs_num == 1:  # High
+                                                            value = '1'
+                                                        elif fbs_num == 0:  # Normal
+                                                            value = '0'
+                                                # Handle numeric values for FBS
+                                                elif field == 'fbs' and isinstance(value, (int, float)):
+                                                    if value == 1:  # High
+                                                        value = '1'
+                                                    elif value == 0:  # Normal
+                                                        value = '0'
                                         form_data[field] = value
                                         print(f"Copied {field}: {value}")  # Debug log
                                         break
@@ -1959,7 +1976,8 @@ def risk_assessment():
                     'risk_type': risk_type,
                     'probability': probability,
                     'risk_description': risk_description,
-                    'detailed_explanation': f"Based on the analysis of your health data, you have a {risk_level.lower()} risk of heart disease with a probability of {probability:.1%}. {risk_description}"
+                    'detailed_explanation': f"Based on the analysis of your health data, you have a {risk_level.lower()} risk of heart disease with a probability of {probability:.1%}. {risk_description}",
+                    'assessment_type': 'risk_assessment'
                 })
                 
                 # Get neighbors data for KNN explanation

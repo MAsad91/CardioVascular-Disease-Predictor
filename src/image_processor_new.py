@@ -156,23 +156,130 @@ class MedicalReportProcessor:
                 # Handle PDF
                 print("Processing PDF file")
                 images = self.convert_pdf_to_images(file_path)
+                all_extracted_data = {}
+                
+                print(f"\n{'='*80}")
+                print(f"STARTING MULTI-PAGE PROCESSING")
+                print(f"Total pages to process: {len(images)}")
+                print(f"{'='*80}")
+                
                 for i, img in enumerate(images):
-                    # Convert PIL Image to numpy array
-                    img_array = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
-                    # Process the image
-                    processed_img = self.preprocess_image(img_array)
-                    text = self.extract_text(processed_img)
+                    print(f"\n{'='*50}")
+                    print(f"Processing page {i+1} of {len(images)}")
+                    print(f"{'='*50}")
                     
-                    # Detect report type
-                    if self.detect_report_type(text) == 'ecg':
-                        page_data = self.extract_ecg_data(text)
-                    else:
-                        page_data = self.extract_diagnostic_data(text)
+                    try:
+                        # Convert PIL Image to numpy array
+                        img_array = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
+                        print(f"Page {i+1}: Image converted to array, shape: {img_array.shape}")
+                        
+                        # Process the image
+                        processed_img = self.preprocess_image(img_array)
+                        print(f"Page {i+1}: Image preprocessing completed")
+                        
+                        text = self.extract_text(processed_img)
+                        print(f"Page {i+1}: OCR completed, text length: {len(text)}")
+                        print(f"Page {i+1} OCR text preview: {text[:300]}...")
+                        
+                        # Detect report type
+                        report_type = self.detect_report_type(text)
+                        print(f"Page {i+1} report type: {report_type}")
+                        
+                        if report_type == 'ecg':
+                            page_data = self.extract_ecg_data(text)
+                        else:
+                            page_data = self.extract_diagnostic_data(text)
+                        
+                        print(f"Page {i+1}: Data extraction completed")
+                        
+                    except Exception as e:
+                        print(f"Error processing page {i+1}: {str(e)}")
+                        page_data = None
                     
                     if page_data:
-                        # Validate the extracted data
-                        extracted_data = self.validate_extracted_data(page_data)
-                        break  # Use first page with valid data
+                        print(f"✅ Found data on page {i+1}: {list(page_data.keys())}")
+                        print(f"📊 Page {i+1} extracted values: {page_data}")
+                        
+                        # Merge data from all pages
+                        print(f"🔄 Merging data from page {i+1} into combined data...")
+                        for key, value in page_data.items():
+                            if key not in all_extracted_data or all_extracted_data[key] is None:
+                                all_extracted_data[key] = value
+                                print(f"  ➕ Added {key}: {value} (new field)")
+                            elif value is not None and all_extracted_data[key] is None:
+                                all_extracted_data[key] = value
+                                print(f"  ➕ Added {key}: {value} (was None)")
+                            elif value is not None and all_extracted_data[key] is not None:
+                                # Smart merging based on field type
+                                if key in ['age', 'sex']:
+                                    # For age and sex, prefer the first valid value (should be consistent across pages)
+                                    if all_extracted_data[key] == 0 and value != 0:
+                                        all_extracted_data[key] = value
+                                        print(f"  🔄 Updated {key}: {all_extracted_data[key]} -> {value} (better value)")
+                                elif key in ['thalach', 'oldpeak', 'trestbps', 'chol']:
+                                    # For vital signs, take the average if both are valid
+                                    if isinstance(value, (int, float)) and isinstance(all_extracted_data[key], (int, float)):
+                                        if all_extracted_data[key] == 0 and value != 0:
+                                            all_extracted_data[key] = value
+                                            print(f"  🔄 Updated {key}: {all_extracted_data[key]} -> {value} (was zero)")
+                                        elif value != 0:
+                                            # Take average for vital signs
+                                            old_val = all_extracted_data[key]
+                                            all_extracted_data[key] = (all_extracted_data[key] + value) / 2
+                                            print(f"  🔄 Averaged {key}: {old_val} + {value} = {all_extracted_data[key]}")
+                                elif key in ['cp', 'fbs', 'restecg', 'exang', 'slope', 'ca', 'thal']:
+                                    # For categorical fields, prefer non-zero values
+                                    if all_extracted_data[key] == 0 and value != 0:
+                                        all_extracted_data[key] = value
+                                        print(f"  🔄 Updated {key}: {all_extracted_data[key]} -> {value} (non-zero)")
+                                    elif value != 0 and all_extracted_data[key] != 0:
+                                        # If both are non-zero, keep the first one (should be consistent)
+                                        print(f"  ⏭️  Skipped {key}: keeping existing value {all_extracted_data[key]}")
+                                        pass
+                                else:
+                                    # For other fields, keep the first non-empty value
+                                    if not all_extracted_data[key] and value:
+                                        all_extracted_data[key] = value
+                                        print(f"  🔄 Updated {key}: {all_extracted_data[key]} -> {value} (non-empty)")
+                    else:
+                        print(f"❌ No data extracted from page {i+1}")
+                
+                # Validate the combined extracted data
+                print(f"\n{'='*80}")
+                print("FINAL DATA COMBINATION AND VALIDATION")
+                print(f"{'='*80}")
+                print(f"Total pages processed: {len(images)}")
+                print(f"Raw combined data before validation: {all_extracted_data}")
+                print(f"Number of fields in combined data: {len(all_extracted_data)}")
+                
+                if all_extracted_data:
+                    extracted_data = self.validate_extracted_data(all_extracted_data)
+                    print(f"Final validated data from all pages: {list(extracted_data.keys()) if extracted_data else 'None'}")
+                    if extracted_data:
+                        print(f"Extracted values: {extracted_data}")
+                        print(f"Number of fields extracted: {len(extracted_data)}")
+                else:
+                    print("No data was extracted from any page!")
+                    extracted_data = None
+                
+                # Check if we have enough essential data
+                if extracted_data:
+                    essential_fields = ['age', 'sex']
+                    missing_essential = [field for field in essential_fields if field not in extracted_data or extracted_data[field] is None]
+                    if missing_essential:
+                        print(f"Warning: Missing essential fields: {missing_essential}")
+                        # Try to extract from any page that might have this data
+                        for i, img in enumerate(images):
+                            print(f"Re-processing page {i+1} for missing essential data...")
+                            img_array = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
+                            processed_img = self.preprocess_image(img_array)
+                            text = self.extract_text(processed_img)
+                            page_data = self.extract_diagnostic_data(text)
+                            if page_data:
+                                for field in missing_essential:
+                                    if field in page_data and page_data[field] is not None:
+                                        extracted_data[field] = page_data[field]
+                                        print(f"Found missing {field}: {page_data[field]} on page {i+1}")
             else:
                 # Handle image file
                 print("Processing image file")
@@ -194,7 +301,7 @@ class MedicalReportProcessor:
                     print(f"Could not read image: {file_path}")
             
             return extracted_data
-            
+        
         except Exception as e:
             print(f"Error processing file: {str(e)}")
             traceback.print_exc()
@@ -456,6 +563,7 @@ class MedicalReportProcessor:
                     # If age is too low (like 1.0 or 3.0), it might be a misread
                     if float_value < 20:
                         print(f"Warning: Age value {float_value} is too low, likely a misread")
+                        # Don't reject it immediately, let the extraction logic handle it
                         return False
                     # If age is reasonable, accept it
                     if min_val <= float_value <= max_val:
@@ -505,6 +613,17 @@ class MedicalReportProcessor:
         print("\nExtracting basic patient information:")
         basic_patterns = {
             'age': [
+                # Most specific patterns first (highest priority)
+                r'sex\s*[:]\s*fomalo\s+age\s*[:]\s*(\d{2})\s+opd',  # "Sex: Fomalo Age: 62 OPD"
+                r'sex\s*[:]\s*female\s+age\s*[:]\s*(\d{2})\s+opd',  # "Sex: Female Age: 62 OPD"
+                r'sex\s*[:]\s*f\s+age\s*[:]\s*(\d{2})\s+opd',  # "Sex: F Age: 62 OPD"
+                r'sex\s*[:]\s*fomalo\s+age\s*[:]\s*(\d{2})',  # "Sex: Fomalo Age: 62"
+                r'sex\s*[:]\s*female\s+age\s*[:]\s*(\d{2})',  # "Sex: Female Age: 62"
+                r'sex\s*[:]\s*f\s+age\s*[:]\s*(\d{2})',  # "Sex: F Age: 62"
+                r'fomalo\s+age\s*[:]\s*(\d{2})',  # "Fomalo Age: 62"
+                r'female\s+age\s*[:]\s*(\d{2})',  # "Female Age: 62"
+                r'age\s*[:]\s*(\d{2})',  # Simple "Age: 62"
+                
                 # Handle OCR errors where numbers get merged
                 r'age\s*[:]?\s*(?:2)?(\d{2})\s*(?:\(years?\)|years?|yrs?)',  # Matches "253 (Years)" -> captures "53"
                 r'age\s*[-=:.]?\s*(?:2)?(\d{2})\s*(?:\(years?\)|years?|yrs?)',  # Matches "age: 253 years" -> captures "53"
@@ -534,7 +653,23 @@ class MedicalReportProcessor:
                 
                 # Backup patterns
                 r'(?:^|\n|\s)(\d{1,3})\s*(?:years?|yrs?)\s*(?:old)?',  # "53 years old"
-                r'(?:^|\n|\s)(?:age|years)[^a-zA-Z\d]*?(\d{1,3})'  # Fallback pattern
+                r'(?:^|\n|\s)(?:age|years)[^a-zA-Z\d]*?(\d{1,3})',  # Fallback pattern
+                
+                # Handle specific OCR errors from the logs
+                r'age\s*[:]\s*(\d{2})',  # Simple "Age: 62"
+                r'age\s*[:]\s*(\d{1,2})',  # Handle single digit ages
+                r'sex\s*[:]\s*fomalo\s+age\s*[:]\s*(\d{2})',  # Handle OCR error in sex field
+                r'fomalo\s+age\s*[:]\s*(\d{2})',  # Handle OCR error "fomalo" instead of "female"
+                r'female\s+age\s*[:]\s*(\d{2})',  # Normal format
+                r'sex\s*[:]\s*female\s+age\s*[:]\s*(\d{2})',  # Full format
+                r'sex\s*[:]\s*f\s+age\s*[:]\s*(\d{2})',  # Abbreviated format
+                # More specific patterns for the exact format in the logs
+                r'sex\s*[:]\s*fomalo\s+age\s*[:]\s*(\d{2})',  # "Sex: Fomalo Age: 62"
+                r'sex\s*[:]\s*female\s+age\s*[:]\s*(\d{2})',  # "Sex: Female Age: 62"
+                r'sex\s*[:]\s*f\s+age\s*[:]\s*(\d{2})',  # "Sex: F Age: 62"
+                # Handle the exact line format from the logs
+                r'sex\s*[:]\s*fomalo\s+age\s*[:]\s*(\d{2})\s+opd',  # Full line match
+                r'sex\s*[:]\s*female\s+age\s*[:]\s*(\d{2})\s+opd',  # Full line match
             ],
             'sex': [
                 r'(?:gender|sex)\s*[:]\s*(male|female|m|f)\b',
@@ -545,13 +680,23 @@ class MedicalReportProcessor:
                 r'\n\s*gender\s*:\s*(female|male)',  # Matches "Gender : Female"
                 r'^\s*:\s*(female|male)\s*$',  # Matches ": Female" in a line
                 r'(?:^|\n|\s)(?:gender|sex)[^a-zA-Z\d]*(male|female|m|f)',  # More flexible match
-                r'patient\s+(?:gender|sex)\s*[^a-zA-Z\d]*(male|female|m|f)'  # Match "Patient Gender: Female"
+                r'patient\s+(?:gender|sex)\s*[^a-zA-Z\d]*(male|female|m|f)',  # Match "Patient Gender: Female"
+                # Handle OCR errors
+                r'sex\s*[:]\s*(fomalo|female|f)\b',  # OCR error "fomalo" instead of "female"
+                r'sex\s*[:]\s*(male|female|m|f)\b',
+                r'sex\s*[:]\s*(fomalo|female|f)',  # OCR error
             ]
         }
 
         # Enhanced test result patterns for tabular format
         test_patterns = {
             'glucose': [
+                # FBS specific patterns
+                r'fbs\s+blood\s+sugar\s+fasling\s*(\d{2,3})',  # OCR error "fasling" instead of "fasting"
+                r'fbs\s+blood\s+sugar\s+fasting\s*(\d{2,3})',
+                r'blood\s+sugar\s+fasling\s*(\d{2,3})',  # OCR error
+                r'blood\s+sugar\s+fasting\s*(\d{2,3})',
+                r'fbs\s*(\d{2,3})',  # Just FBS
                 r'(?:glucose|sugar)\s*(?:\(random\))?\s*(?:[-:=]|\s+)\s*(\d{2,3})',
                 r'serum\s+glucose\s*(?:\(random\))?\s*(?:[-:=]|\s+)\s*(\d{2,3})',
                 r'(?:^|\n)\s*glucose\s*(?:\(random\))?\s*(\d{2,3})',
@@ -564,6 +709,40 @@ class MedicalReportProcessor:
                 r'blood\s+sugar\s*[-=:.]?\s*(\d{2,3})',  # Blood sugar variation
                 r'(?:^|\n|\t)\s*glucose\s*[-=:.]?\s*(\d{2,3})',  # Strict tabular format
                 r'glucose.*?(\d{2,3})\s*(?:mg/dl|mg/dL|mmol/L)?'  # Super flexible with units
+            ],
+            'cholesterol': [
+                r'cholesterol\s*(\d{2,3})',  # Simple cholesterol
+                r'chol\s*(\d{2,3})',  # Abbreviated
+                r'cholesterol\s*[-=:.]?\s*(\d{2,3})',
+                r'chol\s*[-=:.]?\s*(\d{2,3})',
+                r'(?:^|\n)\s*cholesterol\s*(\d{2,3})',
+                r'(?:^|\n)\s*chol\s*(\d{2,3})',
+            ],
+            'hdl': [
+                r'hdl\s+cholesterol\s*(\d{2,3})',
+                r'hdl\s*(\d{2,3})',
+                r'hdl\s*[-=:.]?\s*(\d{2,3})',
+                r'(?:^|\n)\s*hdl\s*(\d{2,3})',
+            ],
+            'ldl': [
+                r'ldl\s+cholesterol\s*(\d{2,3})',
+                r'ldl\s*(\d{2,3})',
+                r'ldl\s*[-=:.]?\s*(\d{2,3})',
+                r'(?:^|\n)\s*ldl\s*(\d{2,3})',
+            ],
+            'triglycerides': [
+                r'triglycerides\s*(\d{2,3})',
+                r'trig\s*(\d{2,3})',
+                r'triglycerides\s*[-=:.]?\s*(\d{2,3})',
+                r'trig\s*[-=:.]?\s*(\d{2,3})',
+                r'(?:^|\n)\s*triglycerides\s*(\d{2,3})',
+                r'(?:^|\n)\s*trig\s*(\d{2,3})',
+            ],
+            'hba1c': [
+                r'hba1c\s*(\d+\.?\d*)',
+                r'hba1c\s*[-=:.]?\s*(\d+\.?\d*)',
+                r'(?:^|\n)\s*hba1c\s*(\d+\.?\d*)',
+                r'glycated\s+haemoglobin\s*(\d+\.?\d*)',
             ],
             'urea': [
                 r'(?:urea|bun)\s*(?:[-:=]|\s+)\s*(\d{2,3})',
@@ -629,6 +808,26 @@ class MedicalReportProcessor:
                             if 50 <= value <= 500:  # Reasonable glucose range
                                 data['fbs'] = 1 if value > 120 else 0
                                 print(f"Found glucose: {value} -> fbs: {data['fbs']}")
+                        elif test == 'cholesterol':
+                            if 100 <= value <= 400:  # Reasonable cholesterol range
+                                data['chol'] = value
+                                print(f"Found cholesterol: {value}")
+                        elif test == 'hdl':
+                            if 20 <= value <= 100:  # Reasonable HDL range
+                                data['hdl'] = value
+                                print(f"Found HDL: {value}")
+                        elif test == 'ldl':
+                            if 50 <= value <= 200:  # Reasonable LDL range
+                                data['ldl'] = value
+                                print(f"Found LDL: {value}")
+                        elif test == 'triglycerides':
+                            if 50 <= value <= 500:  # Reasonable triglycerides range
+                                data['triglycerides'] = value
+                                print(f"Found triglycerides: {value}")
+                        elif test == 'hba1c':
+                            if 3.0 <= value <= 15.0:  # Reasonable HbA1c range
+                                data['hba1c'] = value
+                                print(f"Found HbA1c: {value}")
                         elif test == 'urea':
                             if 10 <= value <= 200:  # Reasonable urea range
                                 data['urea'] = value  # Store urea value
@@ -662,6 +861,7 @@ class MedicalReportProcessor:
         
         # Diagnostic report indicators
         diagnostic_indicators = [
+            r'lab\s+report',
             r'laboratory\s+report',
             r'lab(?:oratory)?\s+(?:no|number)',
             r'specimen\s+received',
@@ -672,6 +872,17 @@ class MedicalReportProcessor:
             r'renal\s+function\s+tests?',
             r'complete\s+blood\s+count',
             r'serum\s+glucose',
+            r'clinical\s+chemistry',
+            r'haematology',
+            r'lipid\s+profile',
+            r'diabetic\s+monitoring',
+            r'blood\s+sugar',
+            r'fbs',
+            r'hba1c',
+            r'cholesterol',
+            r'triglycerides',
+            r'urea',
+            r'creatinine',
             r'sarwar\s+foundation'
         ]
         
@@ -697,7 +908,7 @@ class MedicalReportProcessor:
         if ecg_matches >= 2:  # Require at least 2 ECG indicators
             print("DEBUG: Detected ECG report format")
             return 'ecg'
-        elif diagnostic_matches >= 3:  # Require at least 3 diagnostic indicators
+        elif diagnostic_matches >= 1:  # Require at least 1 diagnostic indicator
             print(f"DEBUG: Detected diagnostic report format (matches: {diagnostic_matches})")
             return 'diagnostic'
         else:
@@ -747,14 +958,35 @@ class MedicalReportProcessor:
             'Age': {
                 'names': ['Age', 'AGE', 'Patient Age', 'Age (years)', 'Age in years'],
                 'patterns': [
-                    r'(\d{1,3})\s*(?:years?|yrs?)',
-                    r'Age[^0-9]*(\d{1,3})',
-                    r'(\d{1,3})\s*$'
+                    # Most specific patterns first (highest priority)
+                    r'sex\s*[:]\s*fomalo\s+age\s*[:]\s*(\d{2})\s+opd',  # "Sex: Fomalo Age: 62 OPD"
+                    r'sex\s*[:]\s*female\s+age\s*[:]\s*(\d{2})\s+opd',  # "Sex: Female Age: 62 OPD"
+                    r'sex\s*[:]\s*f\s+age\s*[:]\s*(\d{2})\s+opd',  # "Sex: F Age: 62 OPD"
+                    r'sex\s*[:]\s*fomalo\s+age\s*[:]\s*(\d{2})',  # "Sex: Fomalo Age: 62"
+                    r'sex\s*[:]\s*female\s+age\s*[:]\s*(\d{2})',  # "Sex: Female Age: 62"
+                    r'sex\s*[:]\s*f\s+age\s*[:]\s*(\d{2})',  # "Sex: F Age: 62"
+                    r'fomalo\s+age\s*[:]\s*(\d{2})',  # "Fomalo Age: 62"
+                    r'female\s+age\s*[:]\s*(\d{2})',  # "Female Age: 62"
+                    r'age\s*[:]\s*(\d{2})',  # Simple "Age: 62"
+                    r'age\s*[:]\s*(\d{1,2})',  # "Age: 6" or "Age: 62"
+                    # Handle OCR errors where numbers get merged
+                    r'age\s*[:]?\s*(?:2)?(\d{2})\s*(?:\(years?\)|years?|yrs?)',  # Matches "253 (Years)" -> captures "53"
+                    r'age\s*[-=:.]?\s*(?:2)?(\d{2})\s*(?:\(years?\)|years?|yrs?)',  # Matches "age: 253 years" -> captures "53"
+                    r'age\s*[:]?\s*(\d{1,3})\s*(?:\(years?\)|years?|yrs?)',  # Standard age format
+                    r'age\s*[:]?\s*(\d{1,3})',  # Just age with number
+                    # Avoid page numbers - be more specific
+                    r'(?:^|\n|\s)age\s*[:]\s*(\d{1,3})(?:\s|$)',  # Age at start of line or with spaces
+                    r'age\s*[:]\s*(\d{1,3})\s*(?:opd|years?|yrs?|$)',  # Age followed by OPD, years, or end
                 ]
             },
             'Sex': {
                 'names': ['Sex', 'Gender', 'SEX', 'GENDER', 'Patient Sex', 'Patient Gender'],
                 'patterns': [
+                    # Handle OCR errors first
+                    r'sex\s*[:]\s*(fomalo|female|f)\b',  # OCR error "fomalo" instead of "female"
+                    r'sex\s*[:]\s*(male|female|m|f)\b',
+                    r'sex\s*[:]\s*(fomalo|female|f)',  # OCR error
+                    # Standard patterns
                     r'(Male|Female|M|F|male|female|m|f)',  # Case-insensitive matching
                     r'(Male|Female|M|F)',
                     r'(male|female|m|f)'
@@ -934,8 +1166,8 @@ class MedicalReportProcessor:
                 if value:
                     break
             
-            # Method 2: Line-by-line scanning if regex failed
-            if not value:
+            # Method 2: Line-by-line scanning if regex failed (but skip for age to avoid page numbers)
+            if not value and field != 'Age':
                 for line in lines:
                     line_lower = line.lower()
                     for name in field_info['names']:
@@ -968,6 +1200,29 @@ class MedicalReportProcessor:
                     if match:
                         value = match.group(1).strip()
                         extraction_method = f"DIRECT: {pattern}"
+                        print(f"  ✓ Found via {extraction_method}: {value}")
+                        break
+            
+            # Method 3.5: Special handling for Age field to avoid page numbers
+            if not value and field == 'Age':
+                print(f"  🔍 Special age extraction to avoid page numbers")
+                # Look specifically for age patterns that avoid page numbers
+                age_specific_patterns = [
+                    r'sex\s*[:]\s*fomalo\s+age\s*[:]\s*(\d{2})\s+opd',  # "Sex: Fomalo Age: 62 OPD"
+                    r'sex\s*[:]\s*female\s+age\s*[:]\s*(\d{2})\s+opd',  # "Sex: Female Age: 62 OPD"
+                    r'sex\s*[:]\s*f\s+age\s*[:]\s*(\d{2})\s+opd',  # "Sex: F Age: 62 OPD"
+                    r'sex\s*[:]\s*fomalo\s+age\s*[:]\s*(\d{2})',  # "Sex: Fomalo Age: 62"
+                    r'sex\s*[:]\s*female\s+age\s*[:]\s*(\d{2})',  # "Sex: Female Age: 62"
+                    r'sex\s*[:]\s*f\s+age\s*[:]\s*(\d{2})',  # "Sex: F Age: 62"
+                    r'fomalo\s+age\s*[:]\s*(\d{2})',  # "Fomalo Age: 62"
+                    r'female\s+age\s*[:]\s*(\d{2})',  # "Female Age: 62"
+                    r'age\s*[:]\s*(\d{2})',  # Simple "Age: 62"
+                ]
+                for pattern in age_specific_patterns:
+                    match = re.search(pattern, text, re.IGNORECASE)
+                    if match:
+                        value = match.group(1).strip()
+                        extraction_method = f"AGE_SPECIFIC: {pattern}"
                         print(f"  ✓ Found via {extraction_method}: {value}")
                         break
             
@@ -1835,25 +2090,111 @@ class MedicalReportProcessor:
                 # Handle PDF
                 print("Processing PDF file")
                 images = self.convert_pdf_to_images(file_path)
+                all_extracted_data = {}
+                
+                print(f"\n{'='*80}")
+                print(f"STARTING MULTI-PAGE PROCESSING")
+                print(f"Total pages to process: {len(images)}")
+                print(f"{'='*80}")
+                
                 for i, img in enumerate(images):
-                    # Convert PIL Image to numpy array
-                    img_array = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
-                    # Process the image
-                    processed_img = self.preprocess_image(img_array)
-                    text = self.extract_text(processed_img)
+                    print(f"\n{'='*50}")
+                    print(f"Processing page {i+1} of {len(images)}")
+                    print(f"{'='*50}")
                     
-                    # Detect report type
-                    if self.detect_report_type(text) == 'ecg':
-                        page_data = self.extract_ecg_data(text)
-                    else:
-                        page_data = self.extract_fields(text)  # Use robust extraction
+                    try:
+                        # Convert PIL Image to numpy array
+                        img_array = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
+                        print(f"Page {i+1}: Image converted to array, shape: {img_array.shape}")
+                        
+                        # Process the image
+                        processed_img = self.preprocess_image(img_array)
+                        print(f"Page {i+1}: Image preprocessing completed")
+                        
+                        text = self.extract_text(processed_img)
+                        print(f"Page {i+1}: OCR completed, text length: {len(text)}")
+                        print(f"Page {i+1} OCR text preview: {text[:300]}...")
+                        
+                        # Detect report type
+                        report_type = self.detect_report_type(text)
+                        print(f"Page {i+1} report type: {report_type}")
+                        
+                        if report_type == 'ecg':
+                            page_data = self.extract_ecg_data(text)
+                        else:
+                            page_data = self.extract_diagnostic_data(text)
+                        
+                        print(f"Page {i+1}: Data extraction completed")
+                        
+                    except Exception as e:
+                        print(f"Error processing page {i+1}: {str(e)}")
+                        page_data = None
                     
                     if page_data:
-                        # Validate the extracted data
-                        extracted_data = self.validate_extracted_data(page_data)
-                        if extracted_data:
-                            extracted_data = extracted_data
-                            break  # Use first page with valid data
+                        print(f"✅ Found data on page {i+1}: {list(page_data.keys())}")
+                        print(f"📊 Page {i+1} extracted values: {page_data}")
+                        
+                        # Merge data from all pages
+                        print(f"🔄 Merging data from page {i+1} into combined data...")
+                        for key, value in page_data.items():
+                            if key not in all_extracted_data or all_extracted_data[key] is None:
+                                all_extracted_data[key] = value
+                                print(f"  ➕ Added {key}: {value} (new field)")
+                            elif value is not None and all_extracted_data[key] is None:
+                                all_extracted_data[key] = value
+                                print(f"  ➕ Added {key}: {value} (was None)")
+                            elif value is not None and all_extracted_data[key] is not None:
+                                # Smart merging based on field type
+                                if key in ['age', 'sex']:
+                                    # For age and sex, prefer the first valid value (should be consistent across pages)
+                                    if all_extracted_data[key] == 0 and value != 0:
+                                        all_extracted_data[key] = value
+                                        print(f"  🔄 Updated {key}: {all_extracted_data[key]} -> {value} (better value)")
+                                elif key in ['thalach', 'oldpeak', 'trestbps', 'chol']:
+                                    # For vital signs, take the average if both are valid
+                                    if isinstance(value, (int, float)) and isinstance(all_extracted_data[key], (int, float)):
+                                        if all_extracted_data[key] == 0 and value != 0:
+                                            all_extracted_data[key] = value
+                                            print(f"  🔄 Updated {key}: {all_extracted_data[key]} -> {value} (was zero)")
+                                        elif value != 0:
+                                            # Take average for vital signs
+                                            old_val = all_extracted_data[key]
+                                            all_extracted_data[key] = (all_extracted_data[key] + value) / 2
+                                            print(f"  🔄 Averaged {key}: {old_val} + {value} = {all_extracted_data[key]}")
+                                elif key in ['cp', 'fbs', 'restecg', 'exang', 'slope', 'ca', 'thal']:
+                                    # For categorical fields, prefer non-zero values
+                                    if all_extracted_data[key] == 0 and value != 0:
+                                        all_extracted_data[key] = value
+                                        print(f"  🔄 Updated {key}: {all_extracted_data[key]} -> {value} (non-zero)")
+                                    elif value != 0 and all_extracted_data[key] != 0:
+                                        # If both are non-zero, keep the first one (should be consistent)
+                                        print(f"  ⏭️  Skipped {key}: keeping existing value {all_extracted_data[key]}")
+                                        pass
+                                else:
+                                    # For other fields, keep the first non-empty value
+                                    if not all_extracted_data[key] and value:
+                                        all_extracted_data[key] = value
+                                        print(f"  🔄 Updated {key}: {all_extracted_data[key]} -> {value} (non-empty)")
+                    else:
+                        print(f"❌ No data extracted from page {i+1}")
+                
+                # Validate the combined extracted data
+                print(f"\n{'='*80}")
+                print("FINAL DATA COMBINATION AND VALIDATION")
+                print(f"{'='*80}")
+                print(f"Total pages processed: {len(images)}")
+                print(f"Raw combined data before validation: {all_extracted_data}")
+                print(f"Number of fields in combined data: {len(all_extracted_data)}")
+                
+                if all_extracted_data:
+                    extracted_data = self.validate_extracted_data(all_extracted_data)
+                    print(f"Final validated data from all pages: {list(extracted_data.keys()) if extracted_data else 'None'}")
+                    if extracted_data:
+                        print(f"Extracted values: {extracted_data}")
+                        print(f"Number of fields extracted: {len(extracted_data)}")
+                else:
+                    print("No data was extracted from any page!")
+                    extracted_data = None
             else:
                 # Handle image file
                 print("Processing image file")

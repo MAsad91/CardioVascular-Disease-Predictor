@@ -406,7 +406,8 @@
                             </div>
                         </div>
 
-    <!-- Individual Model Results -->
+    <!-- Individual Model Results - Only show for Risk Assessment -->
+    {% if explanation.assessment_type not in ['quick_form', 'quick_assessment'] %}
     <div class="models-grid">
         <div class="model-card">
             <div class="model-header knn">
@@ -435,6 +436,7 @@
             <p class="text-muted mt-2">Gradient Boosting</p>
                                         </div>
                                     </div>
+    {% endif %}
 
     <!-- Detailed Analysis -->
     <div class="content-card">
