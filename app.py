@@ -3504,6 +3504,26 @@ def test_feature_importance():
     except Exception as e:
         return f"Error: {str(e)}"
 
+@app.route('/health')
+def health_check():
+    """Health check endpoint for deployment monitoring"""
+    try:
+        # Quick database check
+        with app.app_context():
+            user_count = User.query.count()
+        return jsonify({
+            'status': 'healthy',
+            'database': 'connected',
+            'users': user_count,
+            'timestamp': datetime.now(timezone.utc).isoformat()
+        }), 200
+    except Exception as e:
+        return jsonify({
+            'status': 'unhealthy',
+            'error': str(e),
+            'timestamp': datetime.now(timezone.utc).isoformat()
+        }), 500
+
 @app.route('/boxplot/<session_id>/<feature>')
 def serve_boxplot(session_id, feature):
     """Serve boxplot images directly as PNG files instead of data URIs"""

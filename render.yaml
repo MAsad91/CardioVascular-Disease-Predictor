@@ -2,6 +2,9 @@ services:
   - type: web
     name: heart-disease-predictor
     env: python
+    plan: starter
+    healthCheckPath: /health
+    autoDeploy: true
     buildCommand: |
       # Update package list
       apt-get update
@@ -33,13 +36,7 @@ services:
       echo "Verifying Tesseract installation..."
       tesseract --version
       echo "Tesseract installation verified!"
-    startCommand: |
-      # Verify SQLite configuration
-      python verify_sqlite.py
-      # Initialize database first
-      python init_db.py
-      # Start the application
-      python app.py
+    startCommand: python start_app.py
     envVars:
       - key: PYTHON_VERSION
         value: 3.9.16
