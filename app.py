@@ -80,27 +80,18 @@ app.secret_key = os.urandom(24)
 app.config.from_object(Config)
 
 # Database configuration
-# Use PostgreSQL on Render, fallback to SQLite for local development
-DATABASE_URL = os.getenv('DATABASE_URL')
-if DATABASE_URL and DATABASE_URL.startswith('postgres://'):
-    # Render PostgreSQL - convert to psycopg2 format
-    DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
-    app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
-else:
-    # Local SQLite development
-    instance_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'instance')
-    os.makedirs(instance_path, exist_ok=True)
-    db_path = os.path.join(instance_path, 'heart_disease.db')
-    app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
+# Force SQLite for stable deployment (PostgreSQL causing issues)
+instance_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'instance')
+os.makedirs(instance_path, exist_ok=True)
+db_path = os.path.join(instance_path, 'heart_disease.db')
+app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
+print(f"✅ Using SQLite database: {db_path}")
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Database performance optimizations
+# SQLite database configuration (no pooling needed)
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-    'pool_size': 10,
-    'pool_recycle': 300,
-    'pool_pre_ping': True,
-    'max_overflow': 20
+    'pool_pre_ping': True
 }
 
 # Flask-Mail configuration

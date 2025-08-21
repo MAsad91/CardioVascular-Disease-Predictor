@@ -32,8 +32,8 @@ class Config:
     # Application settings
     DEBUG = os.getenv('FLASK_DEBUG', 'False').lower() == 'true'
     
-    # Database configuration
-    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'sqlite:///heart_disease.db')
+    # Database configuration - Force SQLite for stability
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///heart_disease.db'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # Mail configuration
