@@ -19,7 +19,7 @@ class User(UserMixin, db.Model):
     phone = db.Column(db.String(20), nullable=True)
     date_of_birth = db.Column(db.Date, nullable=True)
     gender = db.Column(db.String(10), nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(datetime.UTC))
     last_login = db.Column(db.DateTime, nullable=True)
     is_active = db.Column(db.Boolean, default=True)
     email_verified = db.Column(db.Boolean, default=False)
@@ -80,7 +80,7 @@ class UserPrediction(db.Model):
     prediction = db.Column(db.Text, nullable=False)  # JSON string
     individual_predictions = db.Column(db.Text)  # JSON string
     explanation = db.Column(db.Text)  # JSON string
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    timestamp = db.Column(db.DateTime, default=lambda: datetime.now(datetime.UTC))
     source = db.Column(db.String(50), default='manual_entry')
     risk_level = db.Column(db.String(20))
     probability = db.Column(db.Float)
@@ -113,7 +113,7 @@ class UserMedicalReport(db.Model):
     filename = db.Column(db.String(255), nullable=False)
     original_filename = db.Column(db.String(255), nullable=False)
     file_type = db.Column(db.String(50), nullable=False)
-    upload_date = db.Column(db.DateTime, default=datetime.utcnow)
+    upload_date = db.Column(db.DateTime, default=lambda: datetime.now(datetime.UTC))
     content = db.Column(db.Text)  # Extracted text content
     analysis_results = db.Column(db.Text)  # JSON string of analysis results
     is_processed = db.Column(db.Boolean, default=False)
@@ -142,7 +142,7 @@ class ConversationHistory(db.Model):
     session_id = db.Column(db.String(100), nullable=False)
     message = db.Column(db.Text, nullable=False)
     is_user = db.Column(db.Boolean, default=True)  # True for user, False for bot
-    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    timestamp = db.Column(db.DateTime, default=lambda: datetime.now(datetime.UTC))
     state = db.Column(db.String(50))  # Conversation state
     
     def to_dict(self):

@@ -95,6 +95,14 @@ else:
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+# Database performance optimizations
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    'pool_size': 10,
+    'pool_recycle': 300,
+    'pool_pre_ping': True,
+    'max_overflow': 20
+}
+
 # Flask-Mail configuration
 app.config['MAIL_SERVER'] = os.getenv('MAIL_SERVER')
 app.config['MAIL_PORT'] = int(os.getenv('MAIL_PORT', 587))
@@ -146,7 +154,7 @@ class Prediction(db.Model):
     prediction = db.Column(db.Text, nullable=False)  # Store as JSON string
     individual_predictions = db.Column(db.Text)  # Store as JSON string
     explanation = db.Column(db.Text)  # Store as JSON string
-    timestamp = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    timestamp = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(datetime.UTC))
     source = db.Column(db.String(50), default='manual_entry')  # 'manual_entry', 'pdf_upload', etc.
     risk_level = db.Column(db.String(20))  # 'Low', 'Medium', 'High'
     probability = db.Column(db.Float)  # Risk probability (0.0 to 1.0)
@@ -228,7 +236,7 @@ def save_prediction_to_db(session_id, input_data, consensus, individual_predicti
             prediction=json.dumps(consensus),
             individual_predictions=json.dumps(individual_predictions),
             explanation=json.dumps(explanation),
-            timestamp=datetime.utcnow(),
+            timestamp=datetime.now(datetime.UTC),
             source=source,
             risk_level=consensus.get('risk_level', 'Unknown'),
             probability=consensus.get('probability', 0.0)
@@ -292,7 +300,7 @@ def init_db():
                         role='admin',
                         is_active=True,
                         email_verified=True,
-                        created_at=datetime.utcnow()
+                        created_at=datetime.now(datetime.UTC)
                     )
                     admin_user.set_password('admin123')
                     db.session.add(admin_user)
@@ -326,7 +334,7 @@ def save_user_prediction_to_db(user_id, session_id, input_data, consensus, indiv
             prediction=json.dumps(consensus),
             individual_predictions=json.dumps(individual_predictions),
             explanation=json.dumps(explanation),
-            timestamp=datetime.utcnow(),
+            timestamp=datetime.now(datetime.UTC),
             source=source,
             risk_level=consensus.get('risk_level', 'Unknown'),
             probability=consensus.get('probability', 0.0)
@@ -519,11 +527,17 @@ def signup():
                 flash('Password must be at least 6 characters long.', 'error')
                 return render_template('signup.html')
             
-            # Check if username or email already exists
+            # Check if username or email already exists (optimized query)
             try:
-                existing_user = User.query.filter((User.username == username) | (User.email == email)).first()
-                if existing_user:
-                    flash('Username or email already exists.', 'error')
+                # Use separate queries for better performance
+                existing_username = User.query.filter_by(username=username).first()
+                if existing_username:
+                    flash('Username already exists.', 'error')
+                    return render_template('signup.html')
+                
+                existing_email = User.query.filter_by(email=email).first()
+                if existing_email:
+                    flash('Email already exists.', 'error')
                     return render_template('signup.html')
             except Exception as e:
                 print(f"❌ Database error checking existing user: {str(e)}")
@@ -532,19 +546,27 @@ def signup():
             
             # Create new user (no role field)
             try:
+                print(f"[DEBUG] Creating user object...")
                 new_user = User(
                     username=username,
                     email=email,
-                    created_at=datetime.utcnow(),
+                    created_at=datetime.now(datetime.UTC),
                     is_active=True,
                     email_verified=False
                 )
+                
+                print(f"[DEBUG] Setting password...")
                 new_user.set_password(password)
+                
+                print(f"[DEBUG] Adding user to session...")
                 db.session.add(new_user)
+                
+                print(f"[DEBUG] Committing to database...")
                 db.session.commit()
                 print(f"✅ User created successfully: {username}")
                 
                 # Log the user in automatically
+                print(f"[DEBUG] Logging user in...")
                 login_user(new_user)
                 flash('Account created successfully! Welcome to Heart Care.', 'success')
                 return redirect(url_for('index'))
@@ -1294,7 +1316,7 @@ def upload_report():
                                     filename=unique_filename,
                                     original_filename=original_filename,
                                     file_type='pdf',
-                                    upload_date=datetime.utcnow(),
+                                    upload_date=datetime.now(datetime.UTC),
                                     content=None,  # You can set this to extracted text if available
                                     analysis_results=json.dumps(extracted_data),
                                     is_processed=True,
