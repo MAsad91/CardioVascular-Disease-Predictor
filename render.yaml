@@ -34,6 +34,8 @@ services:
       tesseract --version
       echo "Tesseract installation verified!"
     startCommand: |
+      # Verify SQLite configuration
+      python verify_sqlite.py
       # Initialize database first
       python init_db.py
       # Start the application

@@ -33,6 +33,7 @@ class Config:
     DEBUG = os.getenv('FLASK_DEBUG', 'False').lower() == 'true'
     
     # Database configuration - Force SQLite for stability
+    # This will be overridden by app.py to use the instance folder
     SQLALCHEMY_DATABASE_URI = 'sqlite:///heart_disease.db'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
