@@ -32,10 +32,11 @@ venv.bak/
 .webassets-cache
 
 # Database (SECURITY: Don't commit user data)
-instance/
-*.db
-*.sqlite
-*.sqlite3
+# NOTE: Including heart_disease.db for viva deployment
+# instance/
+# *.db
+# *.sqlite
+# *.sqlite3
 
 # Environment variables
 .env
