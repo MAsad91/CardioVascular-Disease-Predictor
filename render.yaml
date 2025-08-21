@@ -33,7 +33,11 @@ services:
       echo "Verifying Tesseract installation..."
       tesseract --version
       echo "Tesseract installation verified!"
-    startCommand: python app.py
+    startCommand: |
+      # Initialize database first
+      python init_db.py
+      # Start the application
+      python app.py
     envVars:
       - key: PYTHON_VERSION
         value: 3.9.16
