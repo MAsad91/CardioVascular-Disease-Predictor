@@ -154,7 +154,7 @@ class Prediction(db.Model):
     prediction = db.Column(db.Text, nullable=False)  # Store as JSON string
     individual_predictions = db.Column(db.Text)  # Store as JSON string
     explanation = db.Column(db.Text)  # Store as JSON string
-    timestamp = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(datetime.UTC))
+    timestamp = db.Column(db.DateTime, nullable=False, default=lambda: datetime.now(timezone.utc))
     source = db.Column(db.String(50), default='manual_entry')  # 'manual_entry', 'pdf_upload', etc.
     risk_level = db.Column(db.String(20))  # 'Low', 'Medium', 'High'
     probability = db.Column(db.Float)  # Risk probability (0.0 to 1.0)
@@ -236,7 +236,7 @@ def save_prediction_to_db(session_id, input_data, consensus, individual_predicti
             prediction=json.dumps(consensus),
             individual_predictions=json.dumps(individual_predictions),
             explanation=json.dumps(explanation),
-            timestamp=datetime.now(datetime.UTC),
+            timestamp=datetime.now(timezone.utc),
             source=source,
             risk_level=consensus.get('risk_level', 'Unknown'),
             probability=consensus.get('probability', 0.0)
@@ -300,7 +300,7 @@ def init_db():
                         role='admin',
                         is_active=True,
                         email_verified=True,
-                        created_at=datetime.now(datetime.UTC)
+                        created_at=datetime.now(timezone.utc)
                     )
                     admin_user.set_password('admin123')
                     db.session.add(admin_user)
@@ -334,7 +334,7 @@ def save_user_prediction_to_db(user_id, session_id, input_data, consensus, indiv
             prediction=json.dumps(consensus),
             individual_predictions=json.dumps(individual_predictions),
             explanation=json.dumps(explanation),
-            timestamp=datetime.now(datetime.UTC),
+            timestamp=datetime.now(timezone.utc),
             source=source,
             risk_level=consensus.get('risk_level', 'Unknown'),
             probability=consensus.get('probability', 0.0)
@@ -550,7 +550,7 @@ def signup():
                 new_user = User(
                     username=username,
                     email=email,
-                    created_at=datetime.now(datetime.UTC),
+                    created_at=datetime.now(timezone.utc),
                     is_active=True,
                     email_verified=False
                 )
@@ -1316,7 +1316,7 @@ def upload_report():
                                     filename=unique_filename,
                                     original_filename=original_filename,
                                     file_type='pdf',
-                                    upload_date=datetime.now(datetime.UTC),
+                                    upload_date=datetime.now(timezone.utc),
                                     content=None,  # You can set this to extracted text if available
                                     analysis_results=json.dumps(extracted_data),
                                     is_processed=True,
